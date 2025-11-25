@@ -1,0 +1,48 @@
+.main-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.form-container {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	margin-top: 30px;
+	padding: 20px;
+	width: 50vw;
+	border: 1px solid black;
+	border-radius: 10px;
+}
+.form,
+.form-button {
+	width: 40vw;
+}
+.form-redirection-text {
+	text-align: center;
+	margin-top: 5px;
+}
+.doctor-dropdown-list{
+	width: 40vw;
+	position: relative;
+}
+.doctor-dropdown-list button{
+	width: 100%;
+	text-align: left;
+	background-color: white;
+	color: black;
+	border: 1px solid #ced4da;
+}
+.doctor-dropdown-list button:hover{
+  background-color: #f8f9fa;
+  border-color: #86b7fe;
+  color: black;
+}
+
+.doctor-dropdown-list :global(.dropdown-menu) {
+  width: 40vw !important;
+}
+
+.doctor-dropdown-item {
+  width: 100% !important;
+  display: block !important;           
+}

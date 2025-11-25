@@ -1,0 +1,9 @@
+.main-container {
+	display: flex;
+	justify-content: center;
+	margin-top: 150px;
+}
+.home-container {
+	width: 50vw;
+	text-align: justify;
+}
