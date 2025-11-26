@@ -9,7 +9,7 @@ import Records from "./components/Records/Records";
 import Login from "./components/Login/Login";
 import RegisterPatients from "./components/RegisterPatients/RegisterPatients";
 import RegisterDoctors from "./components/RegisterDoctors/RegisterDoctors";
-import TestConfiguration from "./components/TestConfiguration/TestConfiguration";
+import ConfigurationSessions from "./components/configurationSessions/ConfigurationSessions";
 import Footer from "./components/Footer/Footer";
 import style from "./App.module.css";
 import { isUserAuthenticated, getUserRol } from "./services/api";
@@ -67,7 +67,7 @@ function App() {
             <NavigationBarComponent />
             <main className={style["main-content"]}>
               <Routes>
-                <Route path="/configuracion-pruebas" element={<TestConfiguration />}/>
+                <Route path="/configuracion-pruebas" element={<ConfigurationSessions />}/>
                 <Route path="/inicio" element={<Home />}/>
                 <Route path="/pruebas" element={<AfasiaTests />}/>
                 <Route path="/pacientes" element={<DoctorPatients />}/>

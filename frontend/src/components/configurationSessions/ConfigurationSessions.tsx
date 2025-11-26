@@ -1,32 +1,27 @@
 import {useEffect, useState} from "react";
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import style from './TestConfiguration.module.css';
+import Alert from "react-bootstrap/Alert";
+import style from './ConfigurationSessions.module.css';
 import { useNavigate } from 'react-router-dom';
-import { getPatientsListPerDoctor, PatientsList } from "../../services/api";
+import { getPatientsListPerDoctor, PatientsList, configureAfasiaSessions } from "../../services/api";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 
-function TestConfiguration() {
+function ConfigurationSessions() {
 const[configurationData, setConfigurationData] =  useState({
 	dni_paciente: '',
 	nivel: 'facil',
 	cantidad_pruebas: 0,
 	tiempo_limite_por_prueba: 0,
-	imagenes_aleatorias: null,
+	imagenes_aleatorias: false,
 });
 
 const [error, setError] = useState('');
 const [patientsList, setPatientsList] = useState<PatientsList[]>([]);
 const [loadingPatients, setLoadingPatients] = useState(false);
 const [selectedPatientName, setSelectedPatientName] = useState('');
-
+const [message, setMessage]= useState('');
 const navigate = useNavigate();
-
-// const patientsList = [
-//   { id: 1, name: 'Juan Pérez' },
-//   { id: 2, name: 'María Gómez' },
-//   { id: 3, name: 'Carlos López' },
-// ];
 
 const getPatientsList = async()=>{
 	try{
@@ -72,16 +67,28 @@ const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 const cleanData = (data: typeof configurationData) => {
 	return{
 		dni_paciente: data.dni_paciente.trim().toUpperCase(),
+		nivel: data.nivel,
 		cantidad_pruebas: data.cantidad_pruebas,
 		tiempo_limite_por_prueba: data.tiempo_limite_por_prueba,
 		imagenes_aleatorias: data.imagenes_aleatorias,
 	}
 }
 
-const handleSubmit = (event: React.FormEvent) => {
+const handleSubmit = async (event: React.FormEvent) => {
   event.preventDefault();
   try{
 	const cleanedData = cleanData(configurationData);
+	const response = await configureAfasiaSessions(cleanedData);
+	setMessage(`${response.message}`);
+	
+	setConfigurationData({
+		dni_paciente: '',
+		nivel: 'facil',
+		cantidad_pruebas: 0,
+		tiempo_limite_por_prueba: 0,
+		imagenes_aleatorias: false,
+	});
+	setSelectedPatientName('');
   }catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -98,6 +105,8 @@ const handleSubmit = (event: React.FormEvent) => {
     <section className={style['main-container']}>
 			<div className={style['form-container']}>
 				<h1>Configuración Pruebas Pacientes</h1>
+				{message && <Alert variant="success">{message}	</Alert>}
+				{error && <Alert variant="danger">{error}</Alert>}
 				<Form className={style['form']} onSubmit={handleSubmit}>
 					<Form.Group className="mb-3">
 						<Form.Label>Seleccione un paciente</Form.Label>
@@ -125,14 +134,6 @@ const handleSubmit = (event: React.FormEvent) => {
 								)
 							}
 						</DropdownButton>
-						{/* <Form.Label>Seleccione un paciente</Form.Label>
-						<Form.Select>
-							{patientsList.map(patient => (
-								<option key={patient.dni} value={patient.dni}>
-									{patient.nombre} {patient.apellidos}
-								</option>
-							))}
-						</Form.Select> */}
 					</Form.Group>
 
 					<Form.Group className="mb-3">
@@ -188,4 +189,4 @@ const handleSubmit = (event: React.FormEvent) => {
   )
 }
 
-export default TestConfiguration;
+export default ConfigurationSessions;

@@ -66,6 +66,14 @@ export interface PatientsList{
     apellidos: string;
 }
 
+export interface AfasiaTestConfig{
+    dni_paciente: string;
+    nivel: string;
+    cantidad_pruebas: number;
+    tiempo_limite_por_prueba: number;
+    imagenes_aleatorias: boolean;
+}
+
 export type UserResponseData = ApiResponse<UserResponse>;
 
 export type DoctorListResponse = ApiResponse<DoctorList[]>;
@@ -212,6 +220,22 @@ export const getPatientsListPerDoctor = async(): Promise<PatientsList[]>=>{
             throw new Error(error.response.data.message || 'Error al obtener la lista de pacientes');
         }
         throw new Error('Error de conexión al obtener la lista de pacientes');
+    }
+}
+
+export const configureAfasiaSessions = async (configData: AfasiaTestConfig): Promise<ApiResponse> =>{
+    try{
+        console.log("Datos enviados para configurar sesiones:" + JSON.stringify(configData))
+        const response = await api.post<ApiResponse>('configuration-sessions/configure', configData);
+        if(!response.data.success){
+           throw new Error(response.data.message || 'Error al configurar las sesiones de afasia') 
+        }
+        return response.data;
+    }catch(error){
+        if(axios.isAxiosError(error) && error.response){
+            throw new Error(error.response.data.message || 'Error al configurar las sesiones de afasia');
+        }
+        throw new Error('Error de conexión al configurar las sesiones de afasia');
     }
 }
 
