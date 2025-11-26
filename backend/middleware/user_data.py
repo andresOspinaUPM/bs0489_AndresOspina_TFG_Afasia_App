@@ -1,4 +1,5 @@
-from utilds.jwt_utils import decode_access_token
+from utils.jwt_utils import decode_access_token
+from fastapi import Depends, HTTPException, status
 
 def get_current_doctor(token: str = Depends(decode_access_token)) -> dict:
     try:

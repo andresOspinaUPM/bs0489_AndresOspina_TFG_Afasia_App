@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from routes import doctor, patient, auth, afasia_tests
 from db_creation import create_database
 from config.settings import APP_NAME, DEBUG
@@ -23,13 +24,14 @@ app.include_router(doctor.router)
 app.include_router(auth.router)
 app.include_router(afasia_tests.router)
 
-@app.on_event("startup")
-def startup_db_client():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     success = create_database()
     if success:
         print("Base de datos creada con éxito.")
     else:
         print("Error al crear la base de datos.")
+    yield
 
 @app.get("/")
 async def root():
