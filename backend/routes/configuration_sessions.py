@@ -10,6 +10,7 @@ async def insert_sesion_in_db (dni_doctor: str, config_data: dict):
     try:
         dni_paciente = config_data.get("dni_paciente")
         nivel = config_data.get("nivel")
+        nivel = nivel.capitalize()
         cantidad_pruebas = config_data.get("cantidad_pruebas")
         tiempo_limite_por_prueba = config_data.get("tiempo_limite_por_prueba")
         imagenes_aleatorias = config_data.get("imagenes_aleatorias", False)

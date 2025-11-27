@@ -80,6 +80,19 @@ export type DoctorListResponse = ApiResponse<DoctorList[]>;
 
 export type PatientsListResponse = ApiResponse<PatientsList[]>;
 
+api.interceptors.request.use(
+    (config) => {
+        const token = getToken();
+        if(token){
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+)
+
 export const registerPatient = async (patientData: RegisterPatient): Promise<UserResponseData> => {
     try {
         const response = await api.post<UserResponseData>('/paciente/registro', patientData);
@@ -140,9 +153,9 @@ export const loginUser = async (loginData: LoginData): Promise<LoginResponse> =>
         return response.data;
     }catch(error){
         if(axios.isAxiosError(error)&&error.response){
-            throw new Error(error.response.data.message||'Error al iniciar la sesión');
+            throw new Error(error.response.data.message||'Usuario o contraseña incorrectos');
         }
-        throw new Error('Error de conexión al iniciar la sesión');
+        throw new Error('Usuario o contraseña incorrectos');
     }
 }
 
@@ -169,19 +182,6 @@ export const getToken = (): string | null => {
     return localStorage.getItem('access_token');
 }
 
-api.interceptors.request.use(
-    (config) => {
-        const token = getToken();
-        if(token){
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-)
-
 export const getDoctorList = async (): Promise<DoctorList[]>=>{
     try{
         const response = await api.get<DoctorListResponse>('/doctor/list');
@@ -200,16 +200,18 @@ export const getDoctorList = async (): Promise<DoctorList[]>=>{
 export const getPatientsListPerDoctor = async(): Promise<PatientsList[]>=>{
     try{
         const token = localStorage.getItem('access_token');
+        console.log("Token obtenido para lista de pacientes por doctor: " + token);
         if(!token){
             throw new Error ('Usuario no autenticado');
         }
         const response = await api.get<PatientsListResponse>(
-            `/doctor/listOfPatients`,
-            {
-                headers:{
-                    'Authorization': `Bearer ${token}`,
-                }
-            }
+            `/doctor/listOfPatients`
+            // ,
+            // {
+            //     headers:{
+            //         'Authorization': `Bearer ${token}`,
+            //     }
+            // }
         )
         if(!response.data.success){
             throw new Error(response.data.message || 'Error al obtener la lista de pacientes')

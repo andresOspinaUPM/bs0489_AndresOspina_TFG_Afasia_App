@@ -23,7 +23,7 @@
 	margin-top: 5px;
 }
 .patient-dropdown-list{
-	width: 40vw;
+	width: 30vw;
 	position: relative;
 }
 .patient-dropdown-list button{
@@ -40,7 +40,7 @@
 }
 
 .patient-dropdown-list :global(.dropdown-menu) {
-  width: 40vw !important;
+  width: 30vw !important;
 }
 
 .patient-dropdown-item {

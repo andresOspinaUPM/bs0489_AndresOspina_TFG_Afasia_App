@@ -90,7 +90,7 @@ CREATE TABLE respuesta_prueba(
     fecha_respuesta DATETIME DEFAULT (datetime('now', 'localtime')),
     tiempo_respuesta INTEGER NOT NULL,
     respuesta_correcta BOOLEAN NOT NULL,
-    FOREIGN KEY (id_prueba) REFERENCES prueba_generada(id_prueba) ON DELETE CASCADE
+    FOREIGN KEY (id_prueba) REFERENCES registro_prueba_generada(id_prueba) ON DELETE CASCADE
 );
 
 -- Resto de tablas de categorías/propiedades

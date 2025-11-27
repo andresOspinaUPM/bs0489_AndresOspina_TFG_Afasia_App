@@ -3,14 +3,14 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Alert from "react-bootstrap/Alert";
 import style from './ConfigurationSessions.module.css';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { getPatientsListPerDoctor, PatientsList, configureAfasiaSessions } from "../../services/api";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 
 function ConfigurationSessions() {
 const[configurationData, setConfigurationData] =  useState({
 	dni_paciente: '',
-	nivel: 'facil',
+	nivel: 'Facil',
 	cantidad_pruebas: 0,
 	tiempo_limite_por_prueba: 0,
 	imagenes_aleatorias: false,
@@ -21,7 +21,8 @@ const [patientsList, setPatientsList] = useState<PatientsList[]>([]);
 const [loadingPatients, setLoadingPatients] = useState(false);
 const [selectedPatientName, setSelectedPatientName] = useState('');
 const [message, setMessage]= useState('');
-const navigate = useNavigate();
+const [allowConfiguration, setAllowConfiguration] = useState(false);
+// const navigate = useNavigate();
 
 const getPatientsList = async()=>{
 	try{
@@ -55,11 +56,25 @@ const handlePatientSelected = (selectedPatient: PatientsList | null) => {
   if(error) setError('');
 }
 
-const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const numberValue = parseInt(e.target.value);
+	if (isNaN(numberValue) || numberValue < 1) {
+		setError('Por favor, ingrese un número válido mayor 0.');
+		setAllowConfiguration(false);
+		return;
+	}
+	const { name } = e.target;
+	setConfigurationData(prev => ({
+		...prev,
+		[name]: numberValue
+	}));
+	if(error) setError('');
+}
+
+const handleRadioChange = (value: boolean) => {
     setConfigurationData(prev => ({
       ...prev,
-      [name]: value
+      imagenes_aleatorias: value
     }));
     if(error) setError('');
 };
@@ -69,13 +84,14 @@ const cleanData = (data: typeof configurationData) => {
 		dni_paciente: data.dni_paciente.trim().toUpperCase(),
 		nivel: data.nivel,
 		cantidad_pruebas: data.cantidad_pruebas,
-		tiempo_limite_por_prueba: data.tiempo_limite_por_prueba,
+		tiempo_limite_por_prueba: data.tiempo_limite_por_prueba*60,
 		imagenes_aleatorias: data.imagenes_aleatorias,
 	}
 }
 
 const handleSubmit = async (event: React.FormEvent) => {
   event.preventDefault();
+  setAllowConfiguration(true);
   try{
 	const cleanedData = cleanData(configurationData);
 	const response = await configureAfasiaSessions(cleanedData);
@@ -89,16 +105,19 @@ const handleSubmit = async (event: React.FormEvent) => {
 		imagenes_aleatorias: false,
 	});
 	setSelectedPatientName('');
+
   }catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('Error al registrar paciente');
+        setError('Error desconocido al guardar la configuración.');
       }
-    }
+    }finally{
+		setAllowConfiguration(false);
+	}
   
-  alert('Configuración guardada');
-  navigate('/medico.inicio');
+//   alert('Configuración guardada');
+//   navigate('/medico.inicio');
 }
 
   return (
@@ -139,47 +158,51 @@ const handleSubmit = async (event: React.FormEvent) => {
 					<Form.Group className="mb-3">
 						<Form.Label>Introduzca la cantidad de imagenes para la prueba</Form.Label>
 						<Form.Control 
-						required type="number" 
-						value={configurationData.cantidad_pruebas} 
-						placeholder="Cantidad de imágenes" />
+						required type="number"
+						name="cantidad_pruebas"
+						value={configurationData.cantidad_pruebas || ''}
+						onChange={handleNumberChange}
+						placeholder="Cantidad de pruebas" />
 					</Form.Group>
 
 					<Form.Group className="mb-3">
 						<Form.Label>Introduzca el tiempo por imagen</Form.Label>
 						<Form.Control 
-						required type="number" 
-						value={configurationData.tiempo_limite_por_prueba} 
-						placeholder="Tiempo por imagen (segundos)" />
+						required type="number"
+						name="tiempo_limite_por_prueba"
+						value={configurationData.tiempo_limite_por_prueba || ''}
+						onChange={handleNumberChange}
+						placeholder="Tiempo por imagen (minutos)" />
 					</Form.Group>
 
 
 					<Form.Group className="mb-3">
-						<Form.Label>Sexo</Form.Label>
+						<Form.Label>Imagenes Aleatorias</Form.Label>
 						<div key="inline-radio" className="mb-3">
 							<Form.Check 
 								inline 
-								label="True" 
+								label="Si" 
 								name="imagenes_aleatorias" 
 								type="radio" 
 								id="inline-radio-true"
 								value="imagenes aleatorias"
 								checked={configurationData.imagenes_aleatorias === true}
-								onChange={handleRadioChange}
+								onChange={() => handleRadioChange(true)}
 							/>
 							<Form.Check 
 								inline 
-								label="False" 
+								label="No" 
 								name="imagenes_aleatorias" 
 								type="radio" 
 								id="inline-radio-false"
 								value="Mantener siempre las mismas imagenes"
 								checked={configurationData.imagenes_aleatorias === false}
-								onChange={handleRadioChange}
+								onChange={() => handleRadioChange(false)}
 							/>
 						</div>
 					</Form.Group>
 
-					<Button className={style['form-button']} variant="primary" type="submit">
+					<Button className={style['form-button']} variant="primary" type="submit" disabled={allowConfiguration}>
 						Finalizar configuración
 					</Button>
                             

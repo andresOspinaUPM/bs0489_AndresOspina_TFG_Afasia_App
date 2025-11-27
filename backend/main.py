@@ -5,10 +5,20 @@ from routes import doctor, patient, auth, afasia_tests, configuration_sessions
 from db_creation import create_database
 from config.settings import APP_NAME, DEBUG
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    success = create_database()
+    if success:
+        print("Base de datos creada con éxito.")
+    else:
+        print("Error al crear la base de datos.")
+    yield
+
 app = FastAPI(
     title=APP_NAME,
     version="1.0.0",
-    description="API para la gestión de pacientes con afasia",
+    description="API para la gestión de pacientes con afasia - TFG - Ingeniería del Software - UPM",
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -24,15 +34,6 @@ app.include_router(doctor.router)
 app.include_router(auth.router)
 app.include_router(afasia_tests.router)
 app.include_router(configuration_sessions.router)
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    success = create_database()
-    if success:
-        print("Base de datos creada con éxito.")
-    else:
-        print("Error al crear la base de datos.")
-    yield
 
 @app.get("/")
 async def root():

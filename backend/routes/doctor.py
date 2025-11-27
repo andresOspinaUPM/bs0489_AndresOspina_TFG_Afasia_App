@@ -182,10 +182,12 @@ async def list_doctors():
             detail=f"Error al obtener la lista de doctores: {str(e)}"
         )
 
-@router.get('/listOfPatients/', status_code=status.HTTP_200_OK)
+@router.get('/listOfPatients', status_code=status.HTTP_200_OK)
 async def list_doctor_patients(current_doctor: dict = Depends(get_current_doctor)):
     try:
+        print(f"Entra al doctor.py /listOfPatients/ endpoint")
         doctor_dni = current_doctor.get("dni")
+        print(f"Doctor DNI: {doctor_dni}")
         patients = await get_doctor_patients(doctor_dni)
         response_data = {
             "success": True,

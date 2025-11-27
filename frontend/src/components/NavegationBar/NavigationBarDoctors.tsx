@@ -34,6 +34,12 @@ function NavigationBarPatient() {
               </Nav.Link>
             </div>
             <div className={style["link-container"]}>
+              <Image src={icons.ajustes} alt="Configuración Pruebas" className={style["image-icons"]} />
+              <Nav.Link as={Link} to="/doctor/configuracion-pruebas" className="text-white">
+                Configuración Pruebas
+              </Nav.Link>
+            </div>
+            <div className={style["link-container"]}>
               <Image src={icons.prueba} alt="Prueba" className={style["image-icons"]} />
               <Nav.Link as={Link} to="/doctor/pruebas" className="text-white">
                 Pruebas
