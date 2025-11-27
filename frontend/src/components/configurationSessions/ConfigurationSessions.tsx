@@ -4,21 +4,22 @@ import Form from 'react-bootstrap/Form';
 import Alert from "react-bootstrap/Alert";
 import style from './ConfigurationSessions.module.css';
 // import { useNavigate } from 'react-router-dom';
-import { getPatientsListPerDoctor, PatientsList, configureAfasiaSessions } from "../../services/api";
+import { getPatientsListPerDoctor, getTotalOfWords, PatientsList, configureAfasiaSessions } from "../../services/api";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 
 function ConfigurationSessions() {
 const[configurationData, setConfigurationData] =  useState({
 	dni_paciente: '',
 	nivel: 'Facil',
-	cantidad_pruebas: 0,
-	tiempo_limite_por_prueba: 0,
+	cantidad_pruebas: '',
+	tiempo_limite_por_prueba: '',
 	imagenes_aleatorias: false,
 });
 
 const [error, setError] = useState('');
 const [patientsList, setPatientsList] = useState<PatientsList[]>([]);
 const [loadingPatients, setLoadingPatients] = useState(false);
+const [totalWordsAvailable, setTotalWordsAvailable] = useState(0);
 const [selectedPatientName, setSelectedPatientName] = useState('');
 const [message, setMessage]= useState('');
 const [allowConfiguration, setAllowConfiguration] = useState(false);
@@ -42,10 +43,38 @@ const getPatientsList = async()=>{
 	}
 };
 
+const getTotalWordsAvailable = async () => {
+	try{
+		const response = await getTotalOfWords();
+		setTotalWordsAvailable(response);
+		console.log('Total de palabras disponibles:', response);
+	}catch(error){
+		setTotalWordsAvailable(0);
+		throw new Error('Error al obtener el total de palabras disponibles.');
+	}
+};
+
 
 useEffect(() => {
   getPatientsList();
+  getTotalWordsAvailable();
 },[]);
+
+useEffect(()=>{
+	handleAllowConfiguration(configurationData);
+},[configurationData]);
+
+const handleAllowConfiguration = (data: typeof configurationData) => {
+	const dni_paciente = data.dni_paciente.trim().toUpperCase();
+	const nivel = data.nivel;
+	const cantidad_pruebas = data.cantidad_pruebas;
+	const tiempo_limite_por_prueba = data.tiempo_limite_por_prueba;
+	if(dni_paciente !== '' && nivel !== '' && cantidad_pruebas !== '' && tiempo_limite_por_prueba !== ''){
+		setAllowConfiguration(true);
+	}else{
+		setAllowConfiguration(false);
+	}
+}
 
 const handlePatientSelected = (selectedPatient: PatientsList | null) => {
   setConfigurationData(prev => ({
@@ -56,20 +85,51 @@ const handlePatientSelected = (selectedPatient: PatientsList | null) => {
   if(error) setError('');
 }
 
-const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-	const numberValue = parseInt(e.target.value);
-	if (isNaN(numberValue) || numberValue < 1) {
-		setError('Por favor, ingrese un número válido mayor 0.');
-		setAllowConfiguration(false);
-		return;
-	}
+const handleTotalTestsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const value = e.target.value;
+	const numberValue = parseInt(value);
 	const { name } = e.target;
 	setConfigurationData(prev => ({
 		...prev,
-		[name]: numberValue
+		[name]: value
 	}));
+
+	if(value === ''){
+		setError('Por favor, ingrese la cantidad de pruebas.');
+		return;
+	}
+
+	if (isNaN(numberValue) || numberValue < 1) {
+		setError('Por favor, ingrese un número válido mayor 0.');
+		return;
+	}
+	if(numberValue > totalWordsAvailable){
+		setError(`El número máximo de pruebas permitidas es ${totalWordsAvailable}.`);
+		return;
+	}
 	if(error) setError('');
 }
+
+const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const value = e.target.value;
+	const numberValue = parseInt(value);
+	const { name } = e.target;
+	setConfigurationData(prev => ({
+		...prev,
+		[name]: value
+	}));
+
+	if(value === ''){
+		setError('Por favor, ingrese el tiempo límite por prueba.');
+		return;
+	}
+
+	if (isNaN(numberValue) || numberValue < 1) {
+		setError('Por favor, ingrese un número válido mayor 0.');
+		return;
+	}
+	if(error) setError('');
+};
 
 const handleRadioChange = (value: boolean) => {
     setConfigurationData(prev => ({
@@ -80,11 +140,13 @@ const handleRadioChange = (value: boolean) => {
 };
 
 const cleanData = (data: typeof configurationData) => {
+	data.cantidad_pruebas = String(data.cantidad_pruebas).trim();
+	data.tiempo_limite_por_prueba = String(data.tiempo_limite_por_prueba).trim();
 	return{
 		dni_paciente: data.dni_paciente.trim().toUpperCase(),
 		nivel: data.nivel,
-		cantidad_pruebas: data.cantidad_pruebas,
-		tiempo_limite_por_prueba: data.tiempo_limite_por_prueba*60,
+		cantidad_pruebas: parseInt(data.cantidad_pruebas),
+		tiempo_limite_por_prueba: parseInt(data.tiempo_limite_por_prueba)*60,
 		imagenes_aleatorias: data.imagenes_aleatorias,
 	}
 }
@@ -100,8 +162,8 @@ const handleSubmit = async (event: React.FormEvent) => {
 	setConfigurationData({
 		dni_paciente: '',
 		nivel: 'facil',
-		cantidad_pruebas: 0,
-		tiempo_limite_por_prueba: 0,
+		cantidad_pruebas: '',
+		tiempo_limite_por_prueba: '',
 		imagenes_aleatorias: false,
 	});
 	setSelectedPatientName('');
@@ -160,8 +222,8 @@ const handleSubmit = async (event: React.FormEvent) => {
 						<Form.Control 
 						required type="number"
 						name="cantidad_pruebas"
-						value={configurationData.cantidad_pruebas || ''}
-						onChange={handleNumberChange}
+						value={configurationData.cantidad_pruebas}
+						onChange={handleTotalTestsChange}
 						placeholder="Cantidad de pruebas" />
 					</Form.Group>
 
@@ -170,8 +232,8 @@ const handleSubmit = async (event: React.FormEvent) => {
 						<Form.Control 
 						required type="number"
 						name="tiempo_limite_por_prueba"
-						value={configurationData.tiempo_limite_por_prueba || ''}
-						onChange={handleNumberChange}
+						value={configurationData.tiempo_limite_por_prueba}
+						onChange={handleTimeChange}
 						placeholder="Tiempo por imagen (minutos)" />
 					</Form.Group>
 
@@ -202,7 +264,7 @@ const handleSubmit = async (event: React.FormEvent) => {
 						</div>
 					</Form.Group>
 
-					<Button className={style['form-button']} variant="primary" type="submit" disabled={allowConfiguration}>
+					<Button className={style['form-button']} variant="primary" type="submit" disabled={!allowConfiguration}>
 						Finalizar configuración
 					</Button>
                             

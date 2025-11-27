@@ -206,12 +206,6 @@ export const getPatientsListPerDoctor = async(): Promise<PatientsList[]>=>{
         }
         const response = await api.get<PatientsListResponse>(
             `/doctor/listOfPatients`
-            // ,
-            // {
-            //     headers:{
-            //         'Authorization': `Bearer ${token}`,
-            //     }
-            // }
         )
         if(!response.data.success){
             throw new Error(response.data.message || 'Error al obtener la lista de pacientes')
@@ -222,6 +216,24 @@ export const getPatientsListPerDoctor = async(): Promise<PatientsList[]>=>{
             throw new Error(error.response.data.message || 'Error al obtener la lista de pacientes');
         }
         throw new Error('Error de conexión al obtener la lista de pacientes');
+    }
+}
+
+export const getTotalOfWords = async(): Promise<number> => {
+    try{
+        const response = await api.get<ApiResponse>('configuration-sessions/total-words');
+        if(!response.data.success){
+            throw new Error(response.data.message || 'Error al obtener el total de palabras');
+        }
+        if(typeof response.data.data !== 'number'){
+            throw new Error('Datos inválidos al obtener el total de palabras');
+        }
+        return response.data.data;
+    }catch(error){
+        if(axios.isAxiosError(error) && error.response){
+            throw new Error(error.response.data.message || 'Error al obtener el total de palabras');
+        }
+        throw new Error('Error de conexión al obtener el total de palabras');
     }
 }
 

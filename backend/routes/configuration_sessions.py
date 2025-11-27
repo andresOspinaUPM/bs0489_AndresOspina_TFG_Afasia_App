@@ -6,6 +6,24 @@ import sqlite3
 
 router = APIRouter(prefix='/configuration-sessions', tags=['configuration-sessions'])
 
+async def get_total_words_from_db() -> int:
+    try:
+        with get_db_connection('afasia_database.db') as conn:
+            cursor = conn.cursor()
+            result = cursor.execute(
+                """
+                SELECT COUNT(*) FROM palabra
+                """
+            )
+            total_words = result.fetchone()[0]
+            return total_words
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al obtener el total de palabras de la base de datos: {str(e)}"
+        )
+            
+
 async def insert_sesion_in_db (dni_doctor: str, config_data: dict):
     try:
         dni_paciente = config_data.get("dni_paciente")
@@ -129,4 +147,22 @@ async def configure_sessions(config_data: dict, doctor_data: dict = Depends(get_
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al configurar las sesiones: {str(e)}"
         )
-        
+    
+@router.get('/total-words', status_code=status.HTTP_200_OK)
+async def get_total_words():
+    try:
+        response_data = await get_total_words_from_db()
+        response_data = {
+            "success": True,
+            "message": "Total de palabras obtenidas con éxito",
+            "data": response_data
+        }
+        return JSONResponse(
+            status_code = status.HTTP_200_OK,
+            content = response_data
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al obtener el total de palabras: {str(e)}"
+        )
