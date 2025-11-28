@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
 from database.connection import get_db_connection
-from middleware.user_data import get_current_doctor
+from middleware.user_data import get_current_user
 import sqlite3
 
 router = APIRouter(prefix='/configuration-sessions', tags=['configuration-sessions'])
@@ -127,10 +127,10 @@ async def configure_random_words_for_session(cursor, id_sesion: int, cantidad_pr
         )
 
 
-############################### ENDIPOINT ###############################
+############################### ENDIPOINTS ###############################
 
 @router.post('/configure', status_code=status.HTTP_200_OK)
-async def configure_sessions(config_data: dict, doctor_data: dict = Depends(get_current_doctor)):
+async def configure_sessions(config_data: dict, doctor_data: dict = Depends(get_current_user)):
     try:
         dni_doctor = doctor_data.get("dni")
         await insert_sesion_in_db(dni_doctor, config_data)

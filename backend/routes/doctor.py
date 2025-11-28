@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from models.user import UsuarioBase
 from database.connection import get_db_connection
 import sqlite3
-from middleware.user_data import get_current_doctor
+from middleware.user_data import get_current_user
 
 router = APIRouter(prefix='/doctor', tags=['doctor'])
 
@@ -183,7 +183,7 @@ async def list_doctors():
         )
 
 @router.get('/listOfPatients', status_code=status.HTTP_200_OK)
-async def list_doctor_patients(current_doctor: dict = Depends(get_current_doctor)):
+async def list_doctor_patients(current_doctor: dict = Depends(get_current_user)):
     try:
         print(f"Entra al doctor.py /listOfPatients/ endpoint")
         doctor_dni = current_doctor.get("dni")

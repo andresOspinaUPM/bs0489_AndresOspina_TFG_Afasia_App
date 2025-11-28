@@ -3,6 +3,7 @@ import NavigationBar from "./components/NavegationBar/NavegationBar";
 import NavigationBarPatient from "./components/NavegationBar/NavigaionBarPatient";
 import NavigationBarDoctors from "./components/NavegationBar/NavigationBarDoctors";
 import Home from "./components/Home/Home";
+import PatientSessionsList from "./components/PatientSessionsList/PatientSessionsList";
 import AfasiaTests from "./components/AfasiaTests/AfasiaTests";
 import DoctorPatients from "./components/DoctorPatients/DoctorPatients";
 import Records from "./components/Records/Records";
@@ -54,6 +55,7 @@ function App() {
             <main className={style["main-content"]}>
               <Routes>
                 <Route path="/inicio" element={<Home />}/>
+                <Route path="/sesiones" element={<PatientSessionsList />}/>
                 <Route path="/pruebas" element={<AfasiaTests />}/>
                 <Route path="/registros" element={<Records />}/>
               </Routes>

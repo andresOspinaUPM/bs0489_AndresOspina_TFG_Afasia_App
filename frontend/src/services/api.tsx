@@ -74,6 +74,13 @@ export interface AfasiaTestConfig{
     imagenes_aleatorias: boolean;
 }
 
+export interface PatientSessions{
+    id_sesion: number;
+    nombre_sesion: string;
+}
+
+export type SessionsListResponse = ApiResponse<PatientSessions[]>;
+
 export type UserResponseData = ApiResponse<UserResponse>;
 
 export type DoctorListResponse = ApiResponse<DoctorList[]>;
@@ -251,6 +258,24 @@ export const configureAfasiaSessions = async (configData: AfasiaTestConfig): Pro
         }
         throw new Error('Error de conexión al configurar las sesiones de afasia');
     }
+}
+
+export const getSessionsListPerPatient = async(): Promise<PatientSessions[]>=>{
+    try{
+        const response = await api.get<SessionsListResponse>(
+            `/afasia-tests-sessions/patient-sessions-list`
+        )
+        if(!response.data.success){
+            throw new Error(response.data.message || 'Error al obtener la lista de sesiones del paciente')
+        }
+        return response.data.data || [];
+    }catch(error){
+        if(axios.isAxiosError(error) && error.response){
+            throw new Error(error.response.data.message || 'Error al obtener la lista de sesiones del paciente');
+        }
+        throw new Error('Error de conexión al obtener la lista de sesiones del paciente');
+    }
+
 }
 
 export const getAfasiaSessionData = async() : Promise<AfasiaTestSession> =>{
