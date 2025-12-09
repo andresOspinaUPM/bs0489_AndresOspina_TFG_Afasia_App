@@ -12,7 +12,7 @@ async def get_sessions_list_per_patient_from_db(dni_patient: str) -> list[dict]:
             cursor = conn.cursor()
             result = cursor.execute(
                 """
-                SELECT s.id_sesion, s.nombre_sesion FROM sesion AS s
+                SELECT * FROM sesion AS s
                 JOIN configuracion_sesion AS cs ON s.id_sesion = cs.id_sesion
                 WHERE cs.id_paciente = ?
                 """
@@ -24,7 +24,11 @@ async def get_sessions_list_per_patient_from_db(dni_patient: str) -> list[dict]:
             for row in rows:
                 session = {
                     "id_sesion": row[0],
-                    "nombre_sesion": row[1]
+                    "nombre_sesion": row[1],
+                    "nivel": row[2],
+                    "cantidad_pruebas"  : row[3],
+                    "tiempo_limite_por_prueba": row[4],
+                    "imagenes_aleatorias": bool(row[6]),
                 }
                 sessions.append(session)
             return sessions

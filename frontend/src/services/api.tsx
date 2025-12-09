@@ -77,6 +77,10 @@ export interface AfasiaTestConfig{
 export interface PatientSessions{
     id_sesion: number;
     nombre_sesion: string;
+    nivel: string;
+    cantidad_pruebas: number;
+    tiempo_limite_por_prueba: number;
+    imagenes_aleatorias: boolean;
 }
 
 export type SessionsListResponse = ApiResponse<PatientSessions[]>;

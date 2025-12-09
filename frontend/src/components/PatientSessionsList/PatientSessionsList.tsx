@@ -4,6 +4,7 @@ import {getSessionsListPerPatient, PatientSessions} from '../../services/api';
 import Table from 'react-bootstrap/esm/Table';
 import style from './PatientSessionsList.module.css';
 
+
 function PatientSessionsList() {
 	
   const [patientSessions, setPatientSessions] = useState<PatientSessions[]>([]);
@@ -39,7 +40,7 @@ function PatientSessionsList() {
               <tr key={session.id_sesion}>
                 <td>{session.nombre_sesion}</td>
                 <td>
-                  <Link to={`/paciente/pruebas`}>Iniciar Prueba</Link>
+                  <Link to={`/paciente/pruebas/${session.id_sesion}`}>Iniciar Prueba</Link>
                 </td>
               </tr>
             ))}

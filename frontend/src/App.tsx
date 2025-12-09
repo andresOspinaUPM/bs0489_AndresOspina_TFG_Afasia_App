@@ -38,7 +38,7 @@ function App() {
             <main className={style["main-content"]}>
               <Routes>
                 <Route path="/inicio" element={<Home />}/>
-                <Route path="pruebas" element={<AfasiaTests />}/>
+                <Route path="pruebas/:idSesion" element={<AfasiaTests />}/>
                 <Route path="registros" element={<Records />}/>
                 <Route path="/registrarPaciente" element={<RegisterPatients />}/>
                 <Route path="/registrarDoctor" element={<RegisterDoctors />}/>
@@ -55,7 +55,7 @@ function App() {
             <main className={style["main-content"]}>
               <Routes>
                 <Route path="/inicio" element={<Home />}/>
-                <Route path="/sesiones" element={<PatientSessionsList />}/>
+                <Route path="/sesiones-pruebas" element={<PatientSessionsList />}/>
                 <Route path="/pruebas" element={<AfasiaTests />}/>
                 <Route path="/registros" element={<Records />}/>
               </Routes>
