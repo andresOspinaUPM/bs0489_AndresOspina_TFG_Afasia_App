@@ -28,7 +28,7 @@ async def get_sessions_list_per_patient_from_db(dni_patient: str) -> list[dict]:
                     "nivel": row[2],
                     "cantidad_pruebas"  : row[3],
                     "tiempo_limite_por_prueba": row[4],
-                    "imagenes_aleatorias": bool(row[6]),
+                    "imagenes_aleatorias": bool(row[5]),
                 }
                 sessions.append(session)
             return sessions
@@ -58,7 +58,7 @@ async def get_session_by_id_from_db(id_session: int) -> dict | None:
                 "nivel": row[2],
                 "cantidad_pruebas"  : row[3],
                 "tiempo_limite_por_prueba": row[4],
-                "imagenes_aleatorias": bool(row[6]),
+                "imagenes_aleatorias": bool(row[5]),
             }
             return session
     except Exception as e:
@@ -90,14 +90,15 @@ async def get_patient_sessions_list(current_patient: dict = Depends(get_current_
         detail=f"Error al obtener la lista de sesiones del paciente: {str(e)}"
         )
 
-@router.get('/session/{id_sesion}', status_code:status.HTTP_200_OK)
+@router.get('/session/{id_sesion}', status_code=status.HTTP_200_OK)
 async def get_session_by_id(id_session: int):
-    session = await get_session_by_id_from_db(id_session)
-    if session is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Sesión no encontrada"
-        )
+    try:
+        session = await get_session_by_id_from_db(id_session)
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Sesión no encontrada"
+            )
         response_data = {
         "success": True,
         "message": "Sesión obtenida con éxito",

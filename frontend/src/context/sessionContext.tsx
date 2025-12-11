@@ -16,12 +16,13 @@ interface SessionContextType{
   error: string | null;
   setSession: (session: Session | null) => void;
   fetchSession: (id: number) => Promise<void>;
+  cleanSession: () => void;
 }
 
-const SesisonContext = createContext<SessionContextType | undefined>(undefined);
+const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const useSessionContext = () => {
-  const context = useContext(SesisonContext);
+  const context = useContext(SessionContext);
   if(!context){
     throw new Error ('useSession debe usarse dentro del SessionProvider');
   }
@@ -33,7 +34,7 @@ export const SessionProvider = ({children}: {children: ReactNode}) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadSession = async (id: number): Promise<void> => {
+  const fetchSession = async (id: number): Promise<void> => {
       try{
       setLoading(true);
       setError(null);
@@ -59,14 +60,15 @@ export const SessionProvider = ({children}: {children: ReactNode}) => {
     session,
     loading,
     error,
-    setSession: cleanSession,
-    fetchSession: loadSession,
+    setSession,
+    fetchSession,
+    cleanSession,
   };
 
   return (
-    <SesisonContext.Provider value={value}>
+    <SessionContext.Provider value={value}>
       {children}
-    </SesisonContext.Provider>
+    </SessionContext.Provider>
   );
 }
 
