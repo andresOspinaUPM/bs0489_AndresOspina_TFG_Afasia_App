@@ -77,7 +77,7 @@ export interface AfasiaTestConfig{
 export interface PatientSessions{
     id_sesion: number;
     nombre_sesion: string;
-    nivel: string;
+    nivel: 'Facil' | 'Medio' | 'Dificil';
     cantidad_pruebas: number;
     tiempo_limite_por_prueba: number;
     imagenes_aleatorias: boolean;
@@ -280,6 +280,24 @@ export const getSessionsListPerPatient = async(): Promise<PatientSessions[]>=>{
         throw new Error('Error de conexión al obtener la lista de sesiones del paciente');
     }
 
+}
+
+export const getSessionById = async(id_sesion: number): Promise<PatientSessions>=>{
+    try{
+        const response = await api.get<ApiResponse<PatientSessions>>(`/afasia-tests-sessions/session/${id_sesion}`);
+        if(!response.data.success){
+            throw new Error(response.data.message || 'Error al obtener la sesión del paciente')
+        }
+        if(!response.data.data){
+            throw new Error('No se encontraron datos de la sesión del paciente');
+        }
+        return response.data.data;
+    }catch(error){
+        if(axios.isAxiosError(error) && error.response){
+            throw new Error(error.response.data.message || 'Error al obtener la sesión del paciente');
+        }
+        throw new Error('Error de conexión al obtener la sesión del paciente');
+    }
 }
 
 export const getAfasiaSessionData = async() : Promise<AfasiaTestSession> =>{

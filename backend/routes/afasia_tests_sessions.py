@@ -37,6 +37,35 @@ async def get_sessions_list_per_patient_from_db(dni_patient: str) -> list[dict]:
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al obtener la lista de sesiones del paciente desde la base de datos: {str(e)}"
         )
+
+async def get_session_by_id_from_db(id_session: int) -> dict | None:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            result = cursor.execute(
+                """
+                SELECT * FROM sesion 
+                WHERE id_sesion = ?
+                """,
+                (id_session,)
+            )
+            row = result.fetchone()
+            if row is None:
+                return None
+            session = {
+                "id_sesion": row[0],
+                "nombre_sesion": row[1],
+                "nivel": row[2],
+                "cantidad_pruebas"  : row[3],
+                "tiempo_limite_por_prueba": row[4],
+                "imagenes_aleatorias": bool(row[6]),
+            }
+            return session
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al obtener la sesión desde la base de datos: {str(e)}"
+        )
 ############################### ENDIPOINT ###############################
 
 @router.get('/patient-sessions-list', status_code=status.HTTP_200_OK)
@@ -59,4 +88,27 @@ async def get_patient_sessions_list(current_patient: dict = Depends(get_current_
         raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail=f"Error al obtener la lista de sesiones del paciente: {str(e)}"
+        )
+
+@router.get('/session/{id_sesion}', status_code:status.HTTP_200_OK)
+async def get_session_by_id(id_session: int):
+    session = await get_session_by_id_from_db(id_session)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sesión no encontrada"
+        )
+        response_data = {
+        "success": True,
+        "message": "Sesión obtenida con éxito",
+        "data": session
+        }
+        return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=response_data
+        )
+    except Exception as e:
+        raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"Error al obtener la sesión: {str(e)}"
         )
