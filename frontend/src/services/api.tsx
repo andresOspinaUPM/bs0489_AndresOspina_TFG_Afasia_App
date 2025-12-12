@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AfasiaTestSession, AfasiaTestPrueba, AfasiaPalabra, AfasiaTestDescription } from '../types';
+// import { Session, AfasiaTestPrueba, TestWord, TestDescription } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -300,74 +300,74 @@ export const getSessionById = async(id_sesion: number): Promise<PatientSessions>
     }
 }
 
-export const getAfasiaSessionData = async() : Promise<AfasiaTestSession> =>{
-    try{
-        const response = await api.get<ApiResponse<AfasiaTestSession[]>>('/afasiatests/sesiones');
-        if(!response.data.success){
-            throw new Error(response.data.message || 'Error al obtener los datos de la sesión de afasia');
-        }
-        if(!response.data.data || response.data.data.length === 0){
-            throw new Error('No se encontraron datos de la sesión de afasia');
-        }
-        return response.data.data[0];
-    }catch(error){
-        if(axios.isAxiosError(error) && error.response){
-            throw new Error(error.response.data.message || 'Error al obtener los datos de la sesión de afasia');
-        }
-        throw new Error('Error de conexión al obtener los datos de la sesión de afasia');
-    }
-};
+// export const getAfasiaSessionData = async() : Promise<AfasiaTestSession> =>{
+//     try{
+//         const response = await api.get<ApiResponse<AfasiaTestSession[]>>('/afasiatests/sesiones');
+//         if(!response.data.success){
+//             throw new Error(response.data.message || 'Error al obtener los datos de la sesión de afasia');
+//         }
+//         if(!response.data.data || response.data.data.length === 0){
+//             throw new Error('No se encontraron datos de la sesión de afasia');
+//         }
+//         return response.data.data[0];
+//     }catch(error){
+//         if(axios.isAxiosError(error) && error.response){
+//             throw new Error(error.response.data.message || 'Error al obtener los datos de la sesión de afasia');
+//         }
+//         throw new Error('Error de conexión al obtener los datos de la sesión de afasia');
+//     }
+// };
 
-export const getAfasiaTestData = async(id_sesion: number): Promise<AfasiaTestPrueba[]> =>{
-    try{
-        const response = await api.get<ApiResponse<AfasiaTestPrueba[]>>(`/afasiatests/pruebas/${id_sesion}`);
-        if(!response.data.success){
-            throw new Error(response.data.message || 'Error al obtener los datos de las pruebas de afasia');
-        }
-        if(!response.data.data){
-            throw new Error('No se encontraron datos de las pruebas de afasia');
-        }
-        return response.data.data;
-    }catch(error){
-        if(axios.isAxiosError(error) && error.response){
-            throw new Error(error.response.data.message || 'Error al obtener los datos de las pruebas de afasia');
-        }
-        throw new Error('Error de conexión al obtener los datos de las pruebas de afasia');
-    }   
-}
+// export const getAfasiaTestData = async(id_sesion: number): Promise<AfasiaTestPrueba[]> =>{
+//     try{
+//         const response = await api.get<ApiResponse<AfasiaTestPrueba[]>>(`/afasiatests/pruebas/${id_sesion}`);
+//         if(!response.data.success){
+//             throw new Error(response.data.message || 'Error al obtener los datos de las pruebas de afasia');
+//         }
+//         if(!response.data.data){
+//             throw new Error('No se encontraron datos de las pruebas de afasia');
+//         }
+//         return response.data.data;
+//     }catch(error){
+//         if(axios.isAxiosError(error) && error.response){
+//             throw new Error(error.response.data.message || 'Error al obtener los datos de las pruebas de afasia');
+//         }
+//         throw new Error('Error de conexión al obtener los datos de las pruebas de afasia');
+//     }   
+// }
 
-export const getAfasiaWordData = async(id_palabra: number): Promise<AfasiaPalabra> =>{
-    try{
-        const response = await api.get<ApiResponse<AfasiaPalabra>>(`/afasiatests/palabra/${id_palabra}`);
-        if(!response.data.success){
-            throw new Error(response.data.message || 'Error al obtener los datos de la palabra de afasia');
-        }
-        if(!response.data.data){
-            throw new Error('No se encontraron datos de la palabra de afasia');
-        }
-        return response.data.data;
-    }catch(error){
-        if(axios.isAxiosError(error) && error.response){
-            throw new Error(error.response.data.message || 'Error al obtener los datos de la palabra de afasia');
-        }
-        throw new Error('Error de conexión al obtener los datos de la palabra de afasia');
-    }   
-}
+// export const getAfasiaWordData = async(id_palabra: number): Promise<AfasiaPalabra> =>{
+//     try{
+//         const response = await api.get<ApiResponse<AfasiaPalabra>>(`/afasiatests/palabra/${id_palabra}`);
+//         if(!response.data.success){
+//             throw new Error(response.data.message || 'Error al obtener los datos de la palabra de afasia');
+//         }
+//         if(!response.data.data){
+//             throw new Error('No se encontraron datos de la palabra de afasia');
+//         }
+//         return response.data.data;
+//     }catch(error){
+//         if(axios.isAxiosError(error) && error.response){
+//             throw new Error(error.response.data.message || 'Error al obtener los datos de la palabra de afasia');
+//         }
+//         throw new Error('Error de conexión al obtener los datos de la palabra de afasia');
+//     }   
+// }
 
-export const getAfasiaTestDescriptions = async(id_palabra: number): Promise<AfasiaTestDescription> =>{
-    try{
-        const response = await api.get<ApiResponse<AfasiaTestDescription>>(`/afasiatests/descripciones/${id_palabra}`);
-        if(!response.data.success){
-            throw new Error(response.data.message || 'Error al obtener las descripciones de afasia');
-        }
-        if(!response.data.data){
-            throw new Error('No se encontraron descripciones de afasia');
-        }
-        return response.data.data;
-    }catch(error){
-        if(axios.isAxiosError(error) && error.response){
-            throw new Error(error.response.data.message || 'Error al obtener las descripciones de afasia');
-        }
-        throw new Error('Error de conexión al obtener las descripciones de afasia');
-    }   
-}
+// export const getAfasiaTestDescriptions = async(id_palabra: number): Promise<AfasiaTestDescription> =>{
+//     try{
+//         const response = await api.get<ApiResponse<AfasiaTestDescription>>(`/afasiatests/descripciones/${id_palabra}`);
+//         if(!response.data.success){
+//             throw new Error(response.data.message || 'Error al obtener las descripciones de afasia');
+//         }
+//         if(!response.data.data){
+//             throw new Error('No se encontraron descripciones de afasia');
+//         }
+//         return response.data.data;
+//     }catch(error){
+//         if(axios.isAxiosError(error) && error.response){
+//             throw new Error(error.response.data.message || 'Error al obtener las descripciones de afasia');
+//         }
+//         throw new Error('Error de conexión al obtener las descripciones de afasia');
+//     }   
+// }

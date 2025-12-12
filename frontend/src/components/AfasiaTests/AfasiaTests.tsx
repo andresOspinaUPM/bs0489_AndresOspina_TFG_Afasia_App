@@ -2,13 +2,69 @@
 // import Form from "react-bootstrap/Form";
 // import style from "./AfasiaTests.module.css";
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 // import { AfasiaTestSession, AfasiaTestPrueba, AfasiaPalabra, AfasiaTestDescription, AfasiaTestResult } from "../../types";
 // import {getAfasiaSessionData, getAfasiaTestData, getAfasiaWordData, getAfasiaTestDescriptions} from "../../services/api";
+import {Session, useSessionContext, SessionProvider} from "../../context/sessionContext";
+
 
 function AfasiaTests() {
-  const [idSession, setIdSession] = useState<number | null>(null);
-  const [isSessionActive, setIsSessionActive] = useState<boolean>(false);
-  const [areRandomTestsGenerated, setAreRandomTestsGenerated] = useState<boolean>(false);
+  const { sessionId } = useParams<{ sessionId: string }>();
+  // const [areRandomTestsGenerated, setAreRandomTestsGenerated] = useState<boolean>(false);
+  const [isTestCompleted, setIsTestCompleted] = useState<boolean>(false);
+  // const [sessionInfo, setSessionInfo] = useState<Session | null>(null);
+  const {session, loading, error, fetchSession, cleanSession} = useSessionContext();
+  const [currentTest, setCurrentTest] = useState<number>(0);
+
+  useEffect(() => {
+    if(session && session.id_sesion.toString() === sessionId){
+      loadInitialTestData();
+      return;
+    }
+    // ************ EN CASE DE RELOAD DE LA PAGINA ************
+    if(!session && sessionId){
+      const id = parseInt(sessionId, 10);
+      if(!isNaN(id)){
+        fetchSession(id);
+        loadInitialTestData();
+      }
+    }
+  }, [session, sessionId, fetchSession]);
+
+const loadInitialTestData = () => {
+  console.log(`Cargando los datos de la primera prueba para la sesion: ${sessionId}`);
+  if(!session?.imagenes_aleatorias){
+    console.log("Las imágenes no son aleatorias para esta sesión.");
+    setCurrentTest(1);
+  }else{
+    console.log("Las imágenes son aleatorias para esta sesión.");
+  }
+};
+
+
+  if(loading){
+    return(
+      <div>
+        <h3>Cargando datos de la sesión...</h3>
+      </div>
+    )
+  }
+
+  if(error){
+    return(
+      <div>
+        <h3>Error al cargar los datos de la sesión: {error}</h3>
+      </div>
+    )
+  }
+
+  if(!session){
+    return(
+      <div>
+        <h3>No se encontraron datos de la sesión.</h3>
+      </div>
+    )
+  }
 
   return(
     <div>

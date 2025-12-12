@@ -3,6 +3,7 @@ import NavigationBar from "./components/NavegationBar/NavegationBar";
 import NavigationBarPatient from "./components/NavegationBar/NavigaionBarPatient";
 import NavigationBarDoctors from "./components/NavegationBar/NavigationBarDoctors";
 import Home from "./components/Home/Home";
+import { SessionProvider } from "./context/sessionContext";
 import PatientSessionsList from "./components/PatientSessionsList/PatientSessionsList";
 import AfasiaTests from "./components/AfasiaTests/AfasiaTests";
 import DoctorPatients from "./components/DoctorPatients/DoctorPatients";
@@ -38,7 +39,6 @@ function App() {
             <main className={style["main-content"]}>
               <Routes>
                 <Route path="/inicio" element={<Home />}/>
-                <Route path="pruebas/:idSesion" element={<AfasiaTests />}/>
                 <Route path="registros" element={<Records />}/>
                 <Route path="/registrarPaciente" element={<RegisterPatients />}/>
                 <Route path="/registrarDoctor" element={<RegisterDoctors />}/>
@@ -55,8 +55,10 @@ function App() {
             <main className={style["main-content"]}>
               <Routes>
                 <Route path="/inicio" element={<Home />}/>
-                <Route path="/sesiones-pruebas" element={<PatientSessionsList />}/>
-                <Route path="/pruebas" element={<AfasiaTests />}/>
+                <SessionProvider>
+                  <Route path="/sesiones-pruebas" element={<PatientSessionsList />}/>
+                  <Route path="/pruebas" element={<AfasiaTests />}/>
+                </SessionProvider>
                 <Route path="/registros" element={<Records />}/>
               </Routes>
             </main>
@@ -71,7 +73,9 @@ function App() {
               <Routes>
                 <Route path="/configuracion-pruebas" element={<ConfigurationSessions />}/>
                 <Route path="/inicio" element={<Home />}/>
-                <Route path="/pruebas" element={<AfasiaTests />}/>
+                <SessionProvider>
+                  <Route path="/pruebas" element={<AfasiaTests />}/>
+                </SessionProvider>
                 <Route path="/pacientes" element={<DoctorPatients />}/>
                 <Route path="/pacientes/:pacienteId/registros" element={<Records />}/>
               </Routes>

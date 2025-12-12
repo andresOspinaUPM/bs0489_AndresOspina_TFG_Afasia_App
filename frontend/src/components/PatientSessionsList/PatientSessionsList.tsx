@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import {useState, useEffect} from 'react'
 import {getSessionsListPerPatient, PatientSessions} from '../../services/api';
+import { useSessionContext } from "../../context/sessionContext";
+import { Session } from "../../types";
 import Table from 'react-bootstrap/esm/Table';
 import style from './PatientSessionsList.module.css';
 
@@ -9,6 +11,7 @@ function PatientSessionsList() {
 	
   const [patientSessions, setPatientSessions] = useState<PatientSessions[]>([]);
 
+  const {setSession} = useSessionContext();
 
   useEffect(() => {
     getPatientSessions();
@@ -23,6 +26,10 @@ function PatientSessionsList() {
        setPatientSessions([]);
        throw new Error('Error al obtener la lista de sesiones del paciente.');
     }
+  }
+
+  const handleStartSession = (session:Session) => {
+    setSession(session);
   }
 
   return (
@@ -40,7 +47,9 @@ function PatientSessionsList() {
               <tr key={session.id_sesion}>
                 <td>{session.nombre_sesion}</td>
                 <td>
-                  <Link to={`/paciente/pruebas/${session.id_sesion}`}>Iniciar Prueba</Link>
+                  <Link to={`/paciente/pruebas/${session.id_sesion}`}
+                    onClick={() => handleStartSession(session)}
+                  >Iniciar Prueba</Link>
                 </td>
               </tr>
             ))}

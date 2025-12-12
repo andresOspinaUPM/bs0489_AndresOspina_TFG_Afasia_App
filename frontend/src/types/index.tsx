@@ -1,7 +1,8 @@
 export type {
-    AfasiaTestSession,
-    AfasiaTestPrueba,
-    AfasiaPalabra,
-    AfasiaTestDescription,
-    AfasiaTestResult
+    Session,
+    SessionContextType,
+    PredefinedSessionTest,
+    TestData,
+    TestDescription,
+    TestResult
 } from './afasia';

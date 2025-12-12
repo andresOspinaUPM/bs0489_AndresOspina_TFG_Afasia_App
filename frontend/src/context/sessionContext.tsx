@@ -1,23 +1,24 @@
 import {createContext, useContext, useState, ReactNode} from 'react';
 import { getSessionById } from '../services/api';
+import {Session, SessionContextType} from '../types';
 
-interface Session{
-  id_sesion: number;
-  nombre_sesion: string;
-  nivel: 'Facil' | 'Medio' | 'Dificil';
-  cantidad_pruebas: number;
-  tiempo_limite_por_prueba: number;
-  imagenes_aleatorias: boolean;
-}
+// export interface Session{
+//   id_sesion: number;
+//   nombre_sesion: string;
+//   nivel: 'Facil' | 'Medio' | 'Dificil';
+//   cantidad_pruebas: number;
+//   tiempo_limite_por_prueba: number;
+//   imagenes_aleatorias: boolean;
+// }
 
-interface SessionContextType{
-  session: Session | null;
-  loading: boolean;
-  error: string | null;
-  setSession: (session: Session | null) => void;
-  fetchSession: (id: number) => Promise<void>;
-  cleanSession: () => void;
-}
+// interface SessionContextType{
+//   session: Session | null;
+//   loading: boolean;
+//   error: string | null;
+//   setSession: (session: Session | null) => void;
+//   fetchSession: (id: number) => Promise<void>;
+//   cleanSession: () => void;
+// }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
@@ -41,6 +42,7 @@ export const SessionProvider = ({children}: {children: ReactNode}) => {
 
       const data = await getSessionById(id);
       setSession(data);
+      console.log('Sesión obtenida:', data);
     }catch(err){
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMessage);
