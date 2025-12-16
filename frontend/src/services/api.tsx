@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { TestData } from '../types';
 // import { Session, AfasiaTestPrueba, TestWord, TestDescription } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -297,6 +298,42 @@ export const getSessionById = async(id_sesion: number): Promise<PatientSessions>
             throw new Error(error.response.data.message || 'Error al obtener la sesión del paciente');
         }
         throw new Error('Error de conexión al obtener la sesión del paciente');
+    }
+}
+
+export const startSessionInstance = async(id_sesion:number): Promise<ApiResponse>=>{
+    try{
+        const response = await api.post<ApiResponse<number>>(`/afasia-tests/start-session-instance/${id_sesion}`);
+        if(!response.data.success){
+            throw new Error(response.data.message || 'Error al iniciar la instancia de sesión');
+        }
+        if(response.data.data === undefined){
+            throw new Error('No se obtuvo el ID de la instancia de sesión');
+        }
+        return response.data;
+    }catch(error){
+        if(axios.isAxiosError(error) && error.response){
+            throw new Error(error.response.data.message || 'Error al iniciar la instancia de sesión');
+        }
+        throw new Error('Error de conexión al iniciar la instancia de sesión');
+    }
+}
+
+export const getPredefinedTestData = async(id_sesion: number, orden_prueba: number): Promise<TestData> =>{
+    try{
+        const response = await api.get<ApiResponse<TestData>>(`/afasia-tests/test-data/${id_sesion}/${orden_prueba}`);
+        if(!response.data.success){
+            throw new Error(response.data.message || 'Error al obtener los datos de la prueba predefinida');
+        }
+        if(!response.data.data){
+            throw new Error('No se encontraron datos de la prueba predefinida');
+        }
+        return response.data.data ;
+    }catch(error){
+        if(axios.isAxiosError(error) && error.response){
+            throw new Error(error.response.data.message || 'Error al obtener los datos de la prueba predefinida');
+        }
+        throw new Error('Error de conexión al obtener los datos de la prueba predefinida');
     }
 }
 

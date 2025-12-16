@@ -6,19 +6,20 @@ import { useParams } from "react-router-dom";
 // import { AfasiaTestSession, AfasiaTestPrueba, AfasiaPalabra, AfasiaTestDescription, AfasiaTestResult } from "../../types";
 // import {getAfasiaSessionData, getAfasiaTestData, getAfasiaWordData, getAfasiaTestDescriptions} from "../../services/api";
 import {Session, useSessionContext, SessionProvider} from "../../context/sessionContext";
+import { startSessionInstance, getPredefinedTestData } from "../../services/api";
 
 
 function AfasiaTests() {
   const { sessionId } = useParams<{ sessionId: string }>();
-  // const [areRandomTestsGenerated, setAreRandomTestsGenerated] = useState<boolean>(false);
+  const [sessionIntanceId, setSessionInstanceId] = useState<number | null>(null);
   const [isTestCompleted, setIsTestCompleted] = useState<boolean>(false);
-  // const [sessionInfo, setSessionInfo] = useState<Session | null>(null);
   const {session, loading, error, fetchSession, cleanSession} = useSessionContext();
-  const [currentTest, setCurrentTest] = useState<number>(0);
+  const [currentTest, setCurrentTest] = useState<number>(1);
 
   useEffect(() => {
+    
     if(session && session.id_sesion.toString() === sessionId){
-      loadInitialTestData();
+      startInstanceOfSession(session.id_sesion);
       return;
     }
     // ************ EN CASE DE RELOAD DE LA PAGINA ************
@@ -26,21 +27,40 @@ function AfasiaTests() {
       const id = parseInt(sessionId, 10);
       if(!isNaN(id)){
         fetchSession(id);
-        loadInitialTestData();
+        startInstanceOfSession(id);
       }
     }
   }, [session, sessionId, fetchSession]);
 
-const loadInitialTestData = () => {
-  console.log(`Cargando los datos de la primera prueba para la sesion: ${sessionId}`);
-  if(!session?.imagenes_aleatorias){
-    console.log("Las imágenes no son aleatorias para esta sesión.");
-    setCurrentTest(1);
-  }else{
-    console.log("Las imágenes son aleatorias para esta sesión.");
+const startInstanceOfSession = async (sessionId: number) => {
+  try{
+    console.log(`Iniciando la sesión de pruebas para la sesión ID: ${sessionId}`);
+    const response = await startSessionInstance(sessionId);
+    setSessionInstanceId(response.data as number);
+    console.log("Sesión de pruebas iniciada con ID de instancia:", response.data);
+  }catch(error){
+    console.error("Error al iniciar la sesión de pruebas:", error);
   }
-};
+}
 
+useEffect(() => {
+  if (!session) return;
+  const loadTestData = async () => {
+    try{
+        console.log(`Cargando los datos de la primera prueba para la sesion: ${sessionId}`);
+      if(!session?.imagenes_aleatorias){
+        console.log("Las imágenes no son aleatorias para esta sesión.");
+        const response = await getPredefinedTestData(session.id_sesion, currentTest);
+        console.log("Datos de la prueba predefinida:", response);
+      }else{
+        console.log("Las imágenes son aleatorias para esta sesión.");
+      }
+    }catch(error){
+        console.error("Error al cargar los datos de la prueba inicial:", error);
+    }
+  };
+  loadTestData();
+}, [session, sessionId, currentTest]);
 
   if(loading){
     return(

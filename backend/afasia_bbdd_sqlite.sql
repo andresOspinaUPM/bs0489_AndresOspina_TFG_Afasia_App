@@ -74,12 +74,11 @@ CREATE TABLE instancia_sesion(
     FOREIGN KEY (id_paciente) REFERENCES paciente(dni_paciente) ON DELETE CASCADE
 );
 
-CREATE TABLE registro_prueba_generada(
+CREATE TABLE registro_prueba_aleatoria(
     id_prueba INTEGER PRIMARY KEY AUTOINCREMENT,
     id_instancia INTEGER NOT NULL,
     id_palabra INTEGER NOT NULL,
     orden_prueba INTEGER NOT NULL,
-    tiempo_limite INTEGER NOT NULL,
     FOREIGN KEY (id_instancia) REFERENCES instancia_sesion(id_instancia) ON DELETE CASCADE,
     FOREIGN KEY (id_palabra) REFERENCES palabra(id_palabra) ON DELETE CASCADE
 );

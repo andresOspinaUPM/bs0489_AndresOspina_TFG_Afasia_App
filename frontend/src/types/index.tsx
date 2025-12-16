@@ -5,4 +5,4 @@ export type {
     TestData,
     TestDescription,
     TestResult
-} from './afasia';
+} from './afasiaInterfaces';

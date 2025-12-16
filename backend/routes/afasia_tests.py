@@ -1,11 +1,12 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from database.connection import get_db_connection
+from middleware.user_data import get_current_user
 from typing import Optional
 
 router = APIRouter(prefix='/afasia-tests', tags=['afasia_tests'])
 
-async def get_predefined_test_data(id_sesion: int, orden_prueba:int) -> Optional[list[dict]]:
+async def get_predefined_test_data(id_sesion: int, orden_prueba:int) -> Optional[dict]:
     try:
         with get_db_connection("afasia_database.db") as conn:
             cursor = conn.cursor()
@@ -19,15 +20,14 @@ async def get_predefined_test_data(id_sesion: int, orden_prueba:int) -> Optional
                 """,
                 (id_sesion, orden_prueba)
             )
-            rows = cursor.fetchall()
-            test_data = []
-            for row in rows:
-                palabra_data = {
-                    "id_palabra": row[0],
-                    "nombre_palabra": row[1],
-                    "ruta_imagen": row[2]
-                }
-                test_data.append(palabra_data)
+            rows = cursor.fetchone()
+            if rows is None:
+                return None
+            test_data = {
+                "id_palabra": rows[0],
+                "nombre_palabra": rows[1],
+                "ruta_imagen": rows[2]
+            }
             return test_data
     except Exception as e:
         raise HTTPException(
@@ -35,26 +35,69 @@ async def get_predefined_test_data(id_sesion: int, orden_prueba:int) -> Optional
             detail=f"Error al obtener los datos de la prueba: {str(e)}"
         )
 
+async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO instancia_sesion (id_sesion, id_paciente, fecha_inicio)
+                VALUES (?, ?, datetime('now', 'localtime'))
+                """,
+                (id_sesion, id_paciente)
+            )
+            id_session_instance = cursor.lastrowid
+            conn.commit()
+            return id_session_instance
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al iniciar la instancia de la sesión: {str(e)}"
+        )
+
 
 
 # # --------------- ENDPOINTS --------------- #
 
-@router.get('/test-data/{id_sesion}/{orden_prueba}', status_code=status.HTTP_200_OK)
-async def get_test_data_predefined(id_sesion: int, orden_prueba:int)
+@router.post('/start-session-instance/{id_sesion}', status_code=status.HTTP_201_CREATED)
+async def start_session_endpoint(id_sesion: int, current_user: dict = Depends(get_current_user)):
     try:
-        testData = await get_predefined_test_data(id_sesion, orden_prueba)
-        if not testData:
+        id_session_instance = await start_session_instance(id_sesion, current_user.get('dni'))
+        response_data = {
+            "success": True,
+            "message": "Sesión iniciada correctamente",
+            "data": id_session_instance
+        }
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content= response_data
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail ="Error al iniciar la sesión"
+        )
+
+@router.get('/test-data/{id_sesion}/{orden_prueba}', status_code=status.HTTP_200_OK)
+async def start_session(id_sesion: int, orden_prueba:int):
+    try:
+
+        test_data = await get_predefined_test_data(id_sesion, orden_prueba)
+        if not test_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No se encontraron datos para la prueba proporcionada"
             )
+        response_data = {
+            "success": True,
+            "message": "Datos de la prueba obtenidos correctamente",
+            "data": test_data
+        }
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "message": "Datos de la prueba obtenidos correctamente",
-                "data": testData
-            }
+            content= response_data
         )
     except HTTPException:
         raise
