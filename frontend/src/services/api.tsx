@@ -30,7 +30,7 @@ export interface MedicoRegistro extends DefaultUser{}
 export interface ApiResponse<responseData = unknown>{
     success: boolean;
     message: string;
-    data?: responseData;
+    payload?: responseData;
 }
 
 export interface LoginData{
@@ -200,7 +200,7 @@ export const getDoctorList = async (): Promise<DoctorList[]>=>{
         if(!response.data.success){
             throw new Error(response.data.message || 'Error al obtener la lista de doctores')
         }
-        return response.data.data || [];
+        return response.data.payload || [];
     }catch(error){
         if(axios.isAxiosError(error) && error.response){
             throw new Error(error.response.data.message || 'Error al obtener la lista de doctores');
@@ -222,7 +222,7 @@ export const getPatientsListPerDoctor = async(): Promise<PatientsList[]>=>{
         if(!response.data.success){
             throw new Error(response.data.message || 'Error al obtener la lista de pacientes')
         }
-        return response.data.data || [];
+        return response.data.payload || [];
     }catch(error){
         if(axios.isAxiosError(error) && error.response){ 
             throw new Error(error.response.data.message || 'Error al obtener la lista de pacientes');
@@ -237,10 +237,10 @@ export const getTotalOfWords = async(): Promise<number> => {
         if(!response.data.success){
             throw new Error(response.data.message || 'Error al obtener el total de palabras');
         }
-        if(typeof response.data.data !== 'number'){
+        if(typeof response.data.payload !== 'number'){
             throw new Error('Datos inválidos al obtener el total de palabras');
         }
-        return response.data.data;
+        return response.data.payload;
     }catch(error){
         if(axios.isAxiosError(error) && error.response){
             throw new Error(error.response.data.message || 'Error al obtener el total de palabras');
@@ -273,7 +273,7 @@ export const getSessionsListPerPatient = async(): Promise<PatientSessions[]>=>{
         if(!response.data.success){
             throw new Error(response.data.message || 'Error al obtener la lista de sesiones del paciente')
         }
-        return response.data.data || [];
+        return response.data.payload || [];
     }catch(error){
         if(axios.isAxiosError(error) && error.response){
             throw new Error(error.response.data.message || 'Error al obtener la lista de sesiones del paciente');
@@ -289,10 +289,10 @@ export const getSessionById = async(id_sesion: number): Promise<PatientSessions>
         if(!response.data.success){
             throw new Error(response.data.message || 'Error al obtener la sesión del paciente')
         }
-        if(!response.data.data){
+        if(!response.data.payload){
             throw new Error('No se encontraron datos de la sesión del paciente');
         }
-        return response.data.data;
+        return response.data.payload;
     }catch(error){
         if(axios.isAxiosError(error) && error.response){
             throw new Error(error.response.data.message || 'Error al obtener la sesión del paciente');
@@ -307,7 +307,7 @@ export const startSessionInstance = async(id_sesion:number): Promise<ApiResponse
         if(!response.data.success){
             throw new Error(response.data.message || 'Error al iniciar la instancia de sesión');
         }
-        if(response.data.data === undefined){
+        if(response.data.payload === undefined){
             throw new Error('No se obtuvo el ID de la instancia de sesión');
         }
         return response.data;
@@ -319,21 +319,39 @@ export const startSessionInstance = async(id_sesion:number): Promise<ApiResponse
     }
 }
 
-export const getPredefinedTestData = async(id_sesion: number, orden_prueba: number): Promise<TestData> =>{
+export const getPredefinedTestData = async(id_sesion: number): Promise<TestData[]> =>{
     try{
-        const response = await api.get<ApiResponse<TestData>>(`/afasia-tests/test-data/${id_sesion}/${orden_prueba}`);
+        const response = await api.get<ApiResponse<TestData[]>>(`/afasia-tests/test-data/${id_sesion}`);
         if(!response.data.success){
             throw new Error(response.data.message || 'Error al obtener los datos de la prueba predefinida');
         }
-        if(!response.data.data){
+        if(!response.data.payload){
             throw new Error('No se encontraron datos de la prueba predefinida');
         }
-        return response.data.data ;
+        return response.data.payload ;
     }catch(error){
         if(axios.isAxiosError(error) && error.response){
             throw new Error(error.response.data.message || 'Error al obtener los datos de la prueba predefinida');
         }
         throw new Error('Error de conexión al obtener los datos de la prueba predefinida');
+    }
+}
+
+export const getRandomTestData = async(id_session_instance: number, total_tests: number, nivel: string): Promise<TestData[]> => {
+    try{
+        const response = await api.get<ApiResponse<TestData[]>>(`/afasia-tests/random-test-data/${id_session_instance}/${total_tests}/${nivel}`);
+        if(!response.data.success){
+            throw new Error(response.data.message || 'Error al obtener los datos de la prueba aleatoria');
+        }
+        if(!response.data.payload){
+            throw new Error('No se encontraron datos de la prueba aleatoria');
+        }
+        return response.data.payload;
+    }catch(error){
+        if(axios.isAxiosError(error) && error.response){
+            throw new Error(error.response.data.message || 'Error al obtener los datos de la prueba aleatoria');
+        }
+        throw new Error('Error de conexión al obtener los datos de la prueba aleatoria');
     }
 }
 

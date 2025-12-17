@@ -155,7 +155,7 @@ async def get_total_words():
         response_data = {
             "success": True,
             "message": "Total de palabras obtenidas con éxito",
-            "data": response_data
+            "payload": response_data
         }
         return JSONResponse(
             status_code = status.HTTP_200_OK,

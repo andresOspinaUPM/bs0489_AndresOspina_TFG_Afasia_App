@@ -78,7 +78,7 @@ async def get_patient_sessions_list(current_patient: dict = Depends(get_current_
         response_data = {
         "success": True,
         "message": "Lista de sesiones obtenida con éxito",
-        "data": sessions_list
+        "payload": sessions_list
         }
         return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -102,7 +102,7 @@ async def get_session_by_id(id_session: int):
         response_data = {
         "success": True,
         "message": "Sesión obtenida con éxito",
-        "data": session
+        "payload": session
         }
         return JSONResponse(
         status_code=status.HTTP_200_OK,

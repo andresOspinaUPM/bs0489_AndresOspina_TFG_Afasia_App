@@ -43,17 +43,17 @@ async def registrar_paciente(paciente: PacienteBase):
 
             response_data={
                 "success":True,
-                    "message": "Paciente registrado con exito",
-                    "data": {
-                        "dni": paciente.dni,
-                        "nombre": paciente.nombre,
-                        "apellidos": paciente.apellidos,
-                        "email": paciente.email,
-                        "centro_medico": paciente.centro_medico,
-                        "sexo": paciente.sexo,
-                        "fecha_nacimiento": paciente.fecha_nacimiento.isoformat(),
-                        "dni_medico": paciente.dni_medico
-                    }
+                "message": "Paciente registrado con exito",
+                "payload": {
+                    "dni": paciente.dni,
+                    "nombre": paciente.nombre,
+                    "apellidos": paciente.apellidos,
+                    "email": paciente.email,
+                    "centro_medico": paciente.centro_medico,
+                    "sexo": paciente.sexo,
+                    "fecha_nacimiento": paciente.fecha_nacimiento.isoformat(),
+                    "dni_medico": paciente.dni_medico
+                }
             }
 
             conn.commit();

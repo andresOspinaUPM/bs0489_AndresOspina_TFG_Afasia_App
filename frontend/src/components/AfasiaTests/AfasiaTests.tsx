@@ -5,21 +5,23 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 // import { AfasiaTestSession, AfasiaTestPrueba, AfasiaPalabra, AfasiaTestDescription, AfasiaTestResult } from "../../types";
 // import {getAfasiaSessionData, getAfasiaTestData, getAfasiaWordData, getAfasiaTestDescriptions} from "../../services/api";
-import {Session, useSessionContext, SessionProvider} from "../../context/sessionContext";
-import { startSessionInstance, getPredefinedTestData } from "../../services/api";
+import {useSessionContext} from "../../context/sessionContext";
+import { startSessionInstance, getPredefinedTestData, getRandomTestData } from "../../services/api";
+import { TestData } from '../../types';
 
 
 function AfasiaTests() {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const [sessionIntanceId, setSessionInstanceId] = useState<number | null>(null);
+  const [sessionInstanceId, setSessionInstanceId] = useState<number | null>(null);
   const [isTestCompleted, setIsTestCompleted] = useState<boolean>(false);
   const {session, loading, error, fetchSession, cleanSession} = useSessionContext();
   const [currentTest, setCurrentTest] = useState<number>(1);
+  const [testData, setTestData] = useState<TestData[]>([]);
 
   useEffect(() => {
     
     if(session && session.id_sesion.toString() === sessionId){
-      startInstanceOfSession(session.id_sesion);
+
       return;
     }
     // ************ EN CASE DE RELOAD DE LA PAGINA ************
@@ -32,12 +34,23 @@ function AfasiaTests() {
     }
   }, [session, sessionId, fetchSession]);
 
+  useEffect(()=>{
+    if(session && !sessionInstanceId){
+      startInstanceOfSession(session.id_sesion);
+    }
+    return
+  },[session, sessionInstanceId])
+
 const startInstanceOfSession = async (sessionId: number) => {
   try{
     console.log(`Iniciando la sesión de pruebas para la sesión ID: ${sessionId}`);
     const response = await startSessionInstance(sessionId);
-    setSessionInstanceId(response.data as number);
-    console.log("Sesión de pruebas iniciada con ID de instancia:", response.data);
+    if(response.payload === undefined){
+      throw new Error('No se obtuvo el ID de la instancia de sesión');
+    }else{
+      setSessionInstanceId(response.payload as number);
+    }
+    console.log("Sesión de pruebas iniciada con ID de instancia:", response.payload);
   }catch(error){
     console.error("Error al iniciar la sesión de pruebas:", error);
   }
@@ -50,17 +63,25 @@ useEffect(() => {
         console.log(`Cargando los datos de la primera prueba para la sesion: ${sessionId}`);
       if(!session?.imagenes_aleatorias){
         console.log("Las imágenes no son aleatorias para esta sesión.");
-        const response = await getPredefinedTestData(session.id_sesion, currentTest);
+        const response = await getPredefinedTestData(session.id_sesion);
+        setTestData(response);
         console.log("Datos de la prueba predefinida:", response);
       }else{
         console.log("Las imágenes son aleatorias para esta sesión.");
+        if(sessionInstanceId){
+          const response = await getRandomTestData(sessionInstanceId, session.cantidad_pruebas, session.nivel);
+          setTestData(response);
+          console.log("Datos de la prueba aleatoria:", response);
+        }else{
+          throw new Error('No se ha iniciado correctamente una nueva instancia de la sesión');
+        }
       }
     }catch(error){
         console.error("Error al cargar los datos de la prueba inicial:", error);
     }
   };
   loadTestData();
-}, [session, sessionId, currentTest]);
+}, [session, sessionId]);
 
   if(loading){
     return(

@@ -6,35 +6,6 @@ from typing import Optional
 
 router = APIRouter(prefix='/afasia-tests', tags=['afasia_tests'])
 
-async def get_predefined_test_data(id_sesion: int, orden_prueba:int) -> Optional[dict]:
-    try:
-        with get_db_connection("afasia_database.db") as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                SELECT p.id_palabra, p.nombre_palabra, i.ruta_imagen
-                FROM sesion_prueba_predefinida AS sp
-                INNER JOIN palabra AS p ON p.id_palabra = sp.id_palabra
-                LEFT JOIN imagen AS i ON p.id_imagen = i.id_imagen
-                WHERE sp.id_sesion = ? AND sp.orden_prueba = ?
-                """,
-                (id_sesion, orden_prueba)
-            )
-            rows = cursor.fetchone()
-            if rows is None:
-                return None
-            test_data = {
-                "id_palabra": rows[0],
-                "nombre_palabra": rows[1],
-                "ruta_imagen": rows[2]
-            }
-            return test_data
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener los datos de la prueba: {str(e)}"
-        )
-
 async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
     try:
         with get_db_connection("afasia_database.db") as conn:
@@ -55,8 +26,107 @@ async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
             detail=f"Error al iniciar la instancia de la sesión: {str(e)}"
         )
 
+async def get_predefined_test_data(id_sesion: int) -> Optional[dict]:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT p.id_palabra, p.nombre_palabra, i.ruta_imagen, sp.orden_prueba
+                FROM sesion_prueba_predefinida AS sp
+                INNER JOIN palabra AS p ON p.id_palabra = sp.id_palabra
+                LEFT JOIN imagen AS i ON p.id_imagen = i.id_imagen
+                WHERE sp.id_sesion = ?
+                """,
+                (id_sesion,)
+            )
+            rows = cursor.fetchall()
+            test_data = []
+            for row in rows:
+                data = {
+                    "id_palabra": row[0],
+                    "nombre_palabra": row[1],
+                    "ruta_imagen": row[2],
+                    "orden_prueba": row[3]
+                }
+                test_data.append(data)
+            return test_data
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener los datos de la prueba: {str(e)}"
+        )
 
+async def insert_random_test_into_prueba_aleatoria(id_session_instance: int, total_tests: int, nivel: str):
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            random_words = await get_random_words_from_db(cursor, total_tests, nivel)
+            print(f"Palabras aleatorias obtenidas: {random_words}")
+            orden_prueba = 1
+            for (id_palabra,) in random_words:
+                cursor.execute( 
+                    """
+                    INSERT INTO registro_prueba_aleatoria (id_instancia, id_palabra, orden_prueba)
+                    VALUES(?,?,?)
+                    """
+                    ,(id_session_instance, id_palabra, orden_prueba)
+                )
+                orden_prueba += 1
+            conn.commit()
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al guardar registrar las pruebas aleatorias en la base de datos"
+        )
 
+async def get_random_words_from_db(cursor, total_tests: int, nivel: str) -> int:
+    try:
+      cursor.execute(
+            """
+            SELECT id_palabra FROM palabra WHERE nivel = ?
+            ORDER BY RANDOM() LIMIT ?
+            """
+            ,(nivel, total_tests)
+        )
+        random_words = cursor.fetchall()
+        return random_words
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al obtener el total de palabras de la base de datos: {str(e)}"
+        )
+
+async def get_random_tests_data(id_session_instance: int) -> Optional[dict]:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT p.id_palabra, p.nombre_palabra, i.ruta_imagen, pa.orden_prueba
+                FROM registro_prueba_aleatoria AS pa 
+                INNER JOIN palabra AS p ON pa.id_palabra = p.id_palabra
+                LEFT JOIN imagen AS i ON p.id_imagen = i.id_imagen
+                WHERE pa.id_instancia = ?
+                """
+                ,(id_session_instance,)
+            )
+            rows = cursor.fetchall()
+            test_data = []
+            for row in rows:
+                data = {
+                    "id_palabra": row[0],
+                    "nombre_palabra": row[1],
+                    "ruta_imagen": row[2],
+                    "orden_prueba": row[3]
+                }
+                test_data.append(data)
+            return test_data
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener los datos de la prueba: {str(e)}"
+        )
 # # --------------- ENDPOINTS --------------- #
 
 @router.post('/start-session-instance/{id_sesion}', status_code=status.HTTP_201_CREATED)
@@ -66,7 +136,7 @@ async def start_session_endpoint(id_sesion: int, current_user: dict = Depends(ge
         response_data = {
             "success": True,
             "message": "Sesión iniciada correctamente",
-            "data": id_session_instance
+            "payload": id_session_instance
         }
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
@@ -80,11 +150,11 @@ async def start_session_endpoint(id_sesion: int, current_user: dict = Depends(ge
             detail ="Error al iniciar la sesión"
         )
 
-@router.get('/test-data/{id_sesion}/{orden_prueba}', status_code=status.HTTP_200_OK)
-async def start_session(id_sesion: int, orden_prueba:int):
+@router.get('/test-data/{id_sesion}', status_code=status.HTTP_200_OK)
+async def start_session(id_sesion: int):
     try:
 
-        test_data = await get_predefined_test_data(id_sesion, orden_prueba)
+        test_data = await get_predefined_test_data(id_sesion)
         if not test_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -93,7 +163,7 @@ async def start_session(id_sesion: int, orden_prueba:int):
         response_data = {
             "success": True,
             "message": "Datos de la prueba obtenidos correctamente",
-            "data": test_data
+            "payload": test_data
         }
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -106,6 +176,32 @@ async def start_session(id_sesion: int, orden_prueba:int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail ="Error al obtener los datos de la prueba"
         )
+
+@router.get('/random-test-data/{id_session_instance}/{total_tests}/{nivel}', status_code=status.HTTP_200_OK)
+async def get_random_test_data(id_session_instance: int, total_tests: int, nivel: str):
+    try:
+        await insert_random_test_into_prueba_aleatoria(id_session_instance, total_tests, nivel)
+        test_data = await get_random_tests_data(id_session_instance)
+        if not test_data:
+            raise HTTPException(
+                status_code = status.HTTP_404_NOT_FOUND,
+                detail = "No hay datos aleatorios para la prueba"
+            )
+        response_data = {
+            "success": True,
+            "message": "Datos aleatorios de la prueba obtenidos correctamente",
+            "payload": test_data
+        }
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content = response_data
+        )
+    except HTTPException:
+        raise HTTPException(
+            status_code= status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail= "Error al obtener los datos aleatorios de la prueba"
+        )
+
 # async def get_sesion() -> list[dict]:
 #     try:
 #         with get_db_connection("afasia_database.db") as conn:
@@ -348,7 +444,7 @@ async def start_session(id_sesion: int, orden_prueba:int):
 #             status_code=status.HTTP_200_OK,
 #             content={
 #                 "success": True,
-#                 "data": sesiones
+#                 "payload": sesiones
 #             }
 #         )
 #     except HTTPException:
@@ -372,7 +468,7 @@ async def start_session(id_sesion: int, orden_prueba:int):
 #             status_code=status.HTTP_200_OK,
 #             content={
 #                 "success": True,
-#                 "data": pruebas
+#                 "payload": pruebas
 #             }
 #         )
 #     except HTTPException:
@@ -397,7 +493,7 @@ async def start_session(id_sesion: int, orden_prueba:int):
 #             status_code=status.HTTP_200_OK,
 #             content={
 #                 "success": True,
-#                 "data": palabra
+#                 "payload": palabra
 #             }
 #         )
 #     except HTTPException:
@@ -428,7 +524,7 @@ async def start_session(id_sesion: int, orden_prueba:int):
 #             status_code=status.HTTP_200_OK,
 #             content={
 #                 "success": True,
-#                 "data": {
+#                 "payload": {
 #                     "categoria": categoria,
 #                     "uso": uso,
 #                     "accion": accion,

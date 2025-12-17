@@ -137,7 +137,7 @@ async def register_doctor(doctor: UsuarioBase):
         response_data = {
             "success": True,
             "message": "Doctor registrado con exito",
-            "data": {
+            "payload": {
                 "dni": doctor.dni,
                 "nombre": doctor.nombre,
                 "apellidos": doctor.apellidos,
@@ -170,7 +170,7 @@ async def list_doctors():
         response_data = {
             "success": True,
             "message": "Lista de doctores obtenida con exito",
-            "data": doctors
+            "payload": doctors
         }
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -192,7 +192,7 @@ async def list_doctor_patients(current_doctor: dict = Depends(get_current_user))
         response_data = {
             "success": True,
             "message": "Lista de pacientes del doctor obtenida con exito",
-            "data": patients
+            "payload": patients
         }
         return JSONResponse(
             status_code=status.HTTP_200_OK,

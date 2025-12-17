@@ -26,6 +26,7 @@ export interface TestData{
   id_palabra: number;
   nombre_palabra: string;
   ruta_imagen: string | null;
+  orden_prueba: number;
 }
 
 export interface TestDescription{

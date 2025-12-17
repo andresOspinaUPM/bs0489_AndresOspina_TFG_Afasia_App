@@ -3,7 +3,6 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Alert from "react-bootstrap/Alert";
 import style from './ConfigurationSessions.module.css';
-// import { useNavigate } from 'react-router-dom';
 import { getPatientsListPerDoctor, getTotalOfWords, PatientsList, configureAfasiaSessions } from "../../services/api";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 
@@ -23,7 +22,6 @@ const [totalWordsAvailable, setTotalWordsAvailable] = useState(0);
 const [selectedPatientName, setSelectedPatientName] = useState('');
 const [message, setMessage]= useState('');
 const [allowConfiguration, setAllowConfiguration] = useState(false);
-// const navigate = useNavigate();
 
 const getPatientsList = async()=>{
 	try{
@@ -177,9 +175,6 @@ const handleSubmit = async (event: React.FormEvent) => {
     }finally{
 		setAllowConfiguration(false);
 	}
-  
-//   alert('Configuración guardada');
-//   navigate('/medico.inicio');
 }
 
   return (
