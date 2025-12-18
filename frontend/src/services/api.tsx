@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { TestData } from '../types';
+import { TestData, TestDescriptions } from '../types';
 // import { Session, AfasiaTestPrueba, TestWord, TestDescription } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -48,11 +48,11 @@ export interface LoginResponse{
 }
 
 export interface UserResponse{
-        dni: string;
-        nombre: string;
-        apellidos: string;
-        email: string;
-        centro_medico: string;
+    dni: string;
+    nombre: string;
+    apellidos: string;
+    email: string;
+    centro_medico: string;
 }
 
 export interface DoctorList{
@@ -409,20 +409,20 @@ export const getRandomTestData = async(id_session_instance: number, total_tests:
 //     }   
 // }
 
-// export const getAfasiaTestDescriptions = async(id_palabra: number): Promise<AfasiaTestDescription> =>{
-//     try{
-//         const response = await api.get<ApiResponse<AfasiaTestDescription>>(`/afasiatests/descripciones/${id_palabra}`);
-//         if(!response.data.success){
-//             throw new Error(response.data.message || 'Error al obtener las descripciones de afasia');
-//         }
-//         if(!response.data.data){
-//             throw new Error('No se encontraron descripciones de afasia');
-//         }
-//         return response.data.data;
-//     }catch(error){
-//         if(axios.isAxiosError(error) && error.response){
-//             throw new Error(error.response.data.message || 'Error al obtener las descripciones de afasia');
-//         }
-//         throw new Error('Error de conexión al obtener las descripciones de afasia');
-//     }   
-// }
+export const getCurrentTestDescriptions = async(id_palabra: number): Promise<TestDescriptions> =>{
+    try{
+        const response = await api.get<ApiResponse<TestDescriptions>>(`/afasia-tests/descriptions/${id_palabra}`);
+        if(!response.data.success){
+            throw new Error(response.data.message || 'Error al obtener las descripciones de afasia');
+        }
+        if(!response.data.payload){
+            throw new Error('No se encontraron descripciones de afasia');
+        }
+        return response.data.payload;
+    }catch(error){
+        if(axios.isAxiosError(error) && error.response){
+            throw new Error(error.response.data.message || 'Error al obtener las descripciones de afasia');
+        }
+        throw new Error('Error de conexión al obtener las descripciones de afasia');
+    }   
+}

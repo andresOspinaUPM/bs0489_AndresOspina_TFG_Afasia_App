@@ -3,6 +3,6 @@ export type {
     SessionContextType,
     PredefinedSessionTest,
     TestData,
-    TestDescription,
+    TestDescriptions,
     TestResult
 } from './afasiaInterfaces';

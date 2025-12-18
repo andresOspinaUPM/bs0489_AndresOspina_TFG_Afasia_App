@@ -29,7 +29,7 @@ export interface TestData{
   orden_prueba: number;
 }
 
-export interface TestDescription{
+export interface TestDescriptions{
     categoria: string;
     uso: string;
     propiedades: string;
