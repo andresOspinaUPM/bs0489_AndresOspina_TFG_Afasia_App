@@ -49,7 +49,7 @@ const sessionInstanceStartedRef = useRef(false);
     if(!session || sessionInstanceId) return;
     if(sessionInstanceStartedRef.current) return
     sessionInstanceStartedRef.current = true;
-      startInstanceOfSession(session.id_sesion);
+    startInstanceOfSession(session.id_sesion);
     
     return
   },[session, sessionInstanceId])
@@ -115,17 +115,12 @@ const sessionInstanceStartedRef = useRef(false);
   },[currentTest, testWordData])
 
   useEffect(() => {
-    let testInterval: number | null = null;
-    if(!isTestCompleted && testWordData.length > 0){
-      testInterval = setInterval(() => {
-        setTestTime((prevTestTime) => prevTestTime + 1);
-      }, 1000) as number;
-    }
-    return () => {
-      if(testInterval !== null){
-        clearInterval(testInterval);
-      }
-    }
+    if (isTestCompleted || testWordData.length === 0) return;
+    const testInterval = setInterval(() => {
+      setTestTime(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(testInterval);
   }, [isTestCompleted, testWordData]);
 
   useEffect(() => {
@@ -149,8 +144,8 @@ const sessionInstanceStartedRef = useRef(false);
     if(!currentTestData || !session){
       return;
     }
-    const timeLimit = session.tiempo_limite_por_prueba * 60;
-    if(testTime === timeLimit && !isTestCompleted){
+    const timeLimit = session.tiempo_limite_por_prueba;
+    if(testTime >= timeLimit && !isTestCompleted){
       setTestResults((prevResults) => [
         ...prevResults,
         {palabraObjetivo: currentTestData?.nombre_palabra.trim().toLowerCase() || "", resultado: "fallado", tiempo: testTime}
