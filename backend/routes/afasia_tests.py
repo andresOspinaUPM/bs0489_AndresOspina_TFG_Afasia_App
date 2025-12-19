@@ -80,21 +80,21 @@ async def insert_random_test_into_prueba_aleatoria(id_session_instance: int, tot
             detail = f"Error al guardar registrar las pruebas aleatorias en la base de datos"
         )
 
-async def get_random_words_from_db(cursor, total_tests: int, nivel: str) -> int:
+async def get_random_words_from_db(cursor, total_tests: int, nivel: str) -> list:  # ← Cambiado a list
     try:
-      cursor.execute(
+        cursor.execute(
             """
             SELECT id_palabra FROM palabra WHERE nivel = ?
             ORDER BY RANDOM() LIMIT ?
-            """
-            ,(nivel, total_tests)
+            """,
+            (nivel, total_tests)
         )
         random_words = cursor.fetchall()
         return random_words
     except Exception as e:
         raise HTTPException(
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al obtener el total de palabras de la base de datos: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener palabras aleatorias: {str(e)}"
         )
 
 async def get_random_tests_data(id_session_instance: int) -> Optional[dict]:
@@ -127,6 +127,149 @@ async def get_random_tests_data(id_session_instance: int) -> Optional[dict]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener los datos de la prueba: {str(e)}"
         )
+
+
+# ------------ GET DESCRIPCIONES ---------------- #
+
+async def get_description_categoria_by_palabra(id_palabra: int) -> Optional[str]:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT c.descripcion FROM categoria AS c
+                INNER JOIN palabra_categoria AS pc ON c.id_categoria = pc.id_categoria
+                WHERE pc.id_palabra = ?
+                """,
+                (id_palabra,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            else:
+                return None
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener la categoria de la palabra: {str(e)}"
+        )
+
+async def get_description_uso_by_palabra(id_palabra: int) -> Optional[str]:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+            """
+            SELECT u.descripcion FROM uso AS u
+            INNER JOIN palabra_uso AS pu ON u.id_uso = pu.id_uso
+            WHERE pu.id_palabra = ?
+            """,
+            (id_palabra,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            else:
+                return None
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener el uso de la palabra: {str(e)}"
+        )
+
+async def get_description_accion_by_palabra(id_palabra: int) -> Optional[str]:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+            """
+            SELECT a.descripcion FROM accion AS a
+            INNER JOIN palabra_accion AS pa ON a.id_accion = pa.id_accion
+            WHERE pa.id_palabra = ?
+            """,
+            (id_palabra,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            else:
+                return None
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener la accion de la palabra: {str(e)}"
+        )
+
+async def get_description_propiedad_by_palabra(id_palabra: int) -> Optional[str]:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+            """
+            SELECT p.descripcion FROM propiedad AS p
+            INNER JOIN palabra_propiedad AS pp ON p.id_propiedad = pp.id_propiedad
+            WHERE pp.id_palabra = ?
+            """,
+            (id_palabra,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            else:
+                return None
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener la propiedad de la palabra: {str(e)}"
+        )
+
+async def get_description_localizacion_by_palabra(id_palabra: int) -> Optional[str]:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+            SELECT l.descripcion FROM localizacion AS l
+            INNER JOIN palabra_localizacion AS pl ON l.id_localizacion = pl.id_localizacion
+            WHERE pl.id_palabra = ?
+            """,
+            (id_palabra,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            else:
+                return None
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener la localizacion de la palabra: {str(e)}"
+        )
+
+async def get_description_asociacion_by_palabra(id_palabra: int) -> Optional[str]:
+    try:
+        with get_db_connection("afasia_database.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+            """
+            SELECT a.descripcion FROM asociacion AS a
+            INNER JOIN palabra_asociacion AS pa ON a.id_asociacion = pa.id_asociacion
+            WHERE pa.id_palabra = ?
+            """,
+            (id_palabra,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            else:
+                return None
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener la asociacion de la palabra: {str(e)}"
+        )
+
+
 # # --------------- ENDPOINTS --------------- #
 
 @router.post('/start-session-instance/{id_sesion}', status_code=status.HTTP_201_CREATED)
@@ -200,6 +343,44 @@ async def get_random_test_data(id_session_instance: int, total_tests: int, nivel
         raise HTTPException(
             status_code= status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail= "Error al obtener los datos aleatorios de la prueba"
+        )
+
+@router.get('/descriptions/{id_palabra}', status_code=status.HTTP_200_OK)
+async def get_descripciones_by_palabra(id_palabra: int):
+    try:
+        categoria = await get_description_categoria_by_palabra(id_palabra)
+        uso = await get_description_uso_by_palabra(id_palabra)
+        accion = await get_description_accion_by_palabra(id_palabra)
+        propiedades = await get_description_propiedad_by_palabra(id_palabra)
+        localizacion = await get_description_localizacion_by_palabra(id_palabra)
+        asociacion = await get_description_asociacion_by_palabra(id_palabra)
+
+        if any(description is None for description in [categoria, uso, accion, propiedades, localizacion, asociacion]):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No se encontraron descripciones para la palabra proporcionada"
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "payload": {
+                    "categoria": categoria,
+                    "uso": uso,
+                    "accion": accion,
+                    "propiedades": propiedades,
+                    "localizacion": localizacion,
+                    "asociacion": asociacion
+                }
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail ="Error al obtener las descripciones de la palabra"
         )
 
 # async def get_sesion() -> list[dict]:
@@ -289,145 +470,7 @@ async def get_random_test_data(id_session_instance: int, total_tests: int, nivel
 #             detail=f"Error al obtener las palabras de la prueba: {str(e)}"
 #         )
     
-# # ------------ GET DESCRIPCIONES ---------------- #
 
-# async def get_description_categoria_by_palabra(id_palabra: int) -> Optional[str]:
-#     try:
-#         with get_db_connection("afasia_database.db") as conn:
-#             cursor = conn.cursor()
-#             cursor.execute(
-#                 """
-#                 SELECT c.descripcion FROM categoria AS c
-#                 INNER JOIN palabra_categoria AS pc ON c.id_categoria = pc.id_categoria
-#                 WHERE pc.id_palabra = ?
-#                 """,
-#                 (id_palabra,)
-#             )
-#             row = cursor.fetchone()
-#             if row:
-#                 return row[0]
-#             else:
-#                 return None
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error al obtener la categoria de la palabra: {str(e)}"
-#         )
-
-# async def get_description_uso_by_palabra(id_palabra: int) -> Optional[str]:
-#     try:
-#         with get_db_connection("afasia_database.db") as conn:
-#             cursor = conn.cursor()
-#             cursor.execute(
-#             """
-#             SELECT u.descripcion FROM uso AS u
-#             INNER JOIN palabra_uso AS pu ON u.id_uso = pu.id_uso
-#             WHERE pu.id_palabra = ?
-#             """,
-#             (id_palabra,)
-#             )
-#             row = cursor.fetchone()
-#             if row:
-#                 return row[0]
-#             else:
-#                 return None
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error al obtener el uso de la palabra: {str(e)}"
-#         )
-
-# async def get_description_accion_by_palabra(id_palabra: int) -> Optional[str]:
-#     try:
-#         with get_db_connection("afasia_database.db") as conn:
-#             cursor = conn.cursor()
-#             cursor.execute(
-#             """
-#             SELECT a.descripcion FROM accion AS a
-#             INNER JOIN palabra_accion AS pa ON a.id_accion = pa.id_accion
-#             WHERE pa.id_palabra = ?
-#             """,
-#             (id_palabra,)
-#             )
-#             row = cursor.fetchone()
-#             if row:
-#                 return row[0]
-#             else:
-#                 return None
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error al obtener la accion de la palabra: {str(e)}"
-#         )
-
-# async def get_description_propiedad_by_palabra(id_palabra: int) -> Optional[str]:
-#     try:
-#         with get_db_connection("afasia_database.db") as conn:
-#             cursor = conn.cursor()
-#             cursor.execute(
-#             """
-#             SELECT p.descripcion FROM propiedad AS p
-#             INNER JOIN palabra_propiedad AS pp ON p.id_propiedad = pp.id_propiedad
-#             WHERE pp.id_palabra = ?
-#             """,
-#             (id_palabra,)
-#             )
-#             row = cursor.fetchone()
-#             if row:
-#                 return row[0]
-#             else:
-#                 return None
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error al obtener la propiedad de la palabra: {str(e)}"
-#         )
-
-# async def get_description_localizacion_by_palabra(id_palabra: int) -> Optional[str]:
-#     try:
-#         with get_db_connection("afasia_database.db") as conn:
-#             cursor = conn.cursor()
-#             cursor.execute(
-#                 """
-#             SELECT l.descripcion FROM localizacion AS l
-#             INNER JOIN palabra_localizacion AS pl ON l.id_localizacion = pl.id_localizacion
-#             WHERE pl.id_palabra = ?
-#             """,
-#             (id_palabra,)
-#             )
-#             row = cursor.fetchone()
-#             if row:
-#                 return row[0]
-#             else:
-#                 return None
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error al obtener la localizacion de la palabra: {str(e)}"
-#         )
-
-# async def get_description_asociacion_by_palabra(id_palabra: int) -> Optional[str]:
-#     try:
-#         with get_db_connection("afasia_database.db") as conn:
-#             cursor = conn.cursor()
-#             cursor.execute(
-#             """
-#             SELECT a.descripcion FROM asociacion AS a
-#             INNER JOIN palabra_asociacion AS pa ON a.id_asociacion = pa.id_asociacion
-#             WHERE pa.id_palabra = ?
-#             """,
-#             (id_palabra,)
-#             )
-#             row = cursor.fetchone()
-#             if row:
-#                 return row[0]
-#             else:
-#                 return None
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error al obtener la asociacion de la palabra: {str(e)}"
-#         )
 
 # # --------------- ENDPOINTS --------------- #
 
@@ -504,40 +547,3 @@ async def get_random_test_data(id_session_instance: int, total_tests: int, nivel
 #             detail ="Error al obtener las palabras de la prueba"
 #         )
 
-# @router.get('/descripciones/{id_palabra}', status_code=status.HTTP_200_OK)
-# async def get_descripciones_by_palabra(id_palabra: int):
-#     try:
-#         categoria = await get_description_categoria_by_palabra(id_palabra)
-#         uso = await get_description_uso_by_palabra(id_palabra)
-#         accion = await get_description_accion_by_palabra(id_palabra)
-#         propiedades = await get_description_propiedad_by_palabra(id_palabra)
-#         localizacion = await get_description_localizacion_by_palabra(id_palabra)
-#         asociacion = await get_description_asociacion_by_palabra(id_palabra)
-
-#         if any(description is None for description in [categoria, uso, accion, propiedades, localizacion, asociacion]):
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND,
-#                 detail="No se encontraron descripciones para la palabra proporcionada"
-#             )
-
-#         return JSONResponse(
-#             status_code=status.HTTP_200_OK,
-#             content={
-#                 "success": True,
-#                 "payload": {
-#                     "categoria": categoria,
-#                     "uso": uso,
-#                     "accion": accion,
-#                     "propiedades": propiedades,
-#                     "localizacion": localizacion,
-#                     "asociacion": asociacion
-#                 }
-#             }
-#         )
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail ="Error al obtener las descripciones de la palabra"
-#         )

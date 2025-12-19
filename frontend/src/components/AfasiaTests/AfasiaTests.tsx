@@ -16,7 +16,7 @@ function AfasiaTests() {
   const [loadingTest, setLoadingTest] = useState<boolean>(false)
   const [currentTest, setCurrentTest] = useState<number>(1);
   const [testWordData, setTestWordData] = useState<TestData[]>([]);
-  const [currentTestData, setCurrentTestData] = useState<TestData>()
+  const [currentTestData, setCurrentTestData] = useState<TestData | null>(null)
   const [descriptionData, setDescriptionData] = useState<TestDescriptions | null>(null);
   const totalOfDescriptions = 6;
   const [visibleDescriptions, setVisibleDescriptions] = useState<boolean[]>(Array(totalOfDescriptions).fill(false));
@@ -29,14 +29,16 @@ function AfasiaTests() {
   useEffect(() => {
     
     if(session && session.id_sesion.toString() === sessionId){
-
+      console.log('datos de la sesion', session)
       return;
     }
     // ************ EN CASE DE RELOAD DE LA PAGINA ************
     if(!session && sessionId){
+      resetTestsData();
       const id = parseInt(sessionId, 10);
       if(!isNaN(id)){
         fetchSession(id);
+        console.log('datos de la sesion', session)
         startInstanceOfSession(id);
       }
     }
@@ -60,7 +62,6 @@ function AfasiaTests() {
         if(!session?.imagenes_aleatorias){
           console.log("Las imágenes no son aleatorias para esta sesión.");
           response = await getPredefinedTestData(session.id_sesion);
-          setTestWordData(response);
         }else{
           console.log("Las imágenes son aleatorias para esta sesión.");
           if(sessionInstanceId){
@@ -72,7 +73,7 @@ function AfasiaTests() {
         console.log("Datos de la prueba cargada:", response);
         setTestWordData(response);
       }catch(error){
-          throw new Error("Error al cargar los datos de la prueba inicial:");
+          throw new Error("Error al cargar los datos de la prueba inicial");
       }finally{
         setLoadingTest(false)
       }
@@ -86,15 +87,16 @@ function AfasiaTests() {
     const loadCurrentTestData = async () => {
       try{
         const testData = testWordData[currentTest -1];
-        console.log(`datos de la palabra actual ${currentTestData}`)
+        console.log(`datos de la palabra actual ${testData.nombre_palabra}:`, testData)
         if(!testData){
           throw new Error(`No se ha encontrado la pruba ${currentTest}`)
         }
         setCurrentTestData(testData);
         if(testData.id_palabra){
+          console.log(`Se buscaran las decripciones de la palabra con ID: ${testData.id_palabra}`)
           const descriptions = await getCurrentTestDescriptions(testData.id_palabra)
           setDescriptionData(descriptions)
-          console.log(`descripciones actuales de la palabra ${testData.nombre_palabra}: ${descriptionData}`)
+          console.log(`descripciones actuales de la palabra ${testData.nombre_palabra}`, descriptions)
         }else{
           throw new Error("Ha habido un error con los datos de la prueba, no ID palabra")
         }
@@ -125,7 +127,7 @@ function AfasiaTests() {
 
   useEffect(() => {
     if(!currentTestData || !session) return;
-    const totalTimeForDescriptions = (session.tiempo_limite_por_prueba / 2) * 60;
+    const totalTimeForDescriptions = session.tiempo_limite_por_prueba / 2;
     const secondsPerDescription = Math.floor(totalTimeForDescriptions / totalOfDescriptions);
 
     if(testTime > 0 && testTime <= totalTimeForDescriptions && testTime % secondsPerDescription === 0){
@@ -159,7 +161,17 @@ function AfasiaTests() {
   },[testTime, isTestCompleted]);
 
 // *********************** Funciones ***************************************
-
+  const resetTestsData = () => {
+    setLoadingTest(false);
+    setCurrentTest(1);
+    setTestWordData([]);
+    setCurrentTestData(null);
+    setDescriptionData(null);
+    setVisibleDescriptions(Array(totalOfDescriptions).fill(false));
+    setTestTime(0);
+    setUserAnswer("");
+    setTestResults([]);
+  }
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
