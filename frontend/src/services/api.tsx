@@ -355,60 +355,6 @@ export const getRandomTestData = async(id_session_instance: number, total_tests:
     }
 }
 
-// export const getAfasiaSessionData = async() : Promise<AfasiaTestSession> =>{
-//     try{
-//         const response = await api.get<ApiResponse<AfasiaTestSession[]>>('/afasiatests/sesiones');
-//         if(!response.data.success){
-//             throw new Error(response.data.message || 'Error al obtener los datos de la sesión de afasia');
-//         }
-//         if(!response.data.data || response.data.data.length === 0){
-//             throw new Error('No se encontraron datos de la sesión de afasia');
-//         }
-//         return response.data.data[0];
-//     }catch(error){
-//         if(axios.isAxiosError(error) && error.response){
-//             throw new Error(error.response.data.message || 'Error al obtener los datos de la sesión de afasia');
-//         }
-//         throw new Error('Error de conexión al obtener los datos de la sesión de afasia');
-//     }
-// };
-
-// export const getAfasiaTestData = async(id_sesion: number): Promise<AfasiaTestPrueba[]> =>{
-//     try{
-//         const response = await api.get<ApiResponse<AfasiaTestPrueba[]>>(`/afasiatests/pruebas/${id_sesion}`);
-//         if(!response.data.success){
-//             throw new Error(response.data.message || 'Error al obtener los datos de las pruebas de afasia');
-//         }
-//         if(!response.data.data){
-//             throw new Error('No se encontraron datos de las pruebas de afasia');
-//         }
-//         return response.data.data;
-//     }catch(error){
-//         if(axios.isAxiosError(error) && error.response){
-//             throw new Error(error.response.data.message || 'Error al obtener los datos de las pruebas de afasia');
-//         }
-//         throw new Error('Error de conexión al obtener los datos de las pruebas de afasia');
-//     }   
-// }
-
-// export const getAfasiaWordData = async(id_palabra: number): Promise<AfasiaPalabra> =>{
-//     try{
-//         const response = await api.get<ApiResponse<AfasiaPalabra>>(`/afasiatests/palabra/${id_palabra}`);
-//         if(!response.data.success){
-//             throw new Error(response.data.message || 'Error al obtener los datos de la palabra de afasia');
-//         }
-//         if(!response.data.data){
-//             throw new Error('No se encontraron datos de la palabra de afasia');
-//         }
-//         return response.data.data;
-//     }catch(error){
-//         if(axios.isAxiosError(error) && error.response){
-//             throw new Error(error.response.data.message || 'Error al obtener los datos de la palabra de afasia');
-//         }
-//         throw new Error('Error de conexión al obtener los datos de la palabra de afasia');
-//     }   
-// }
-
 export const getCurrentTestDescriptions = async(id_palabra: number): Promise<TestDescriptions> =>{
     try{
         const response = await api.get<ApiResponse<TestDescriptions>>(`/afasia-tests/descriptions/${id_palabra}`);
