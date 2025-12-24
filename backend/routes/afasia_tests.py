@@ -1,15 +1,37 @@
 from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from typing import List, Optional
 from database.connection import get_db_connection
 from middleware.user_data import get_current_user
 from typing import Optional
 
 router = APIRouter(prefix='/afasia-tests', tags=['afasia_tests'])
+database = "afasia_database.db"
 
 async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT id_instancia FROM instancia_sesion
+                WHERE id_sesion = ?
+                AND id_paciente = ?
+                AND completada = 0
+                ORDER BY fecha_inicio DESC
+                LIMIT 1
+                """,
+                (id_sesion, id_paciente)
+            )
+
+            instance_existing = cursor.fetchone()
+
+            if instance_existing:
+                print(f"Ya existe una instancia activa y no se ha completado: {instance_existing[0]}")
+                print(f"sesion: {id_sesion}")
+                return instance_existing[0]
+
             cursor.execute(
                 """
                 INSERT INTO instancia_sesion (id_sesion, id_paciente, fecha_inicio)
@@ -26,9 +48,9 @@ async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
             detail=f"Error al iniciar la instancia de la sesión: {str(e)}"
         )
 
-async def get_predefined_test_data(id_sesion: int) -> Optional[dict]:
+async def get_predefined_test_data(id_sesion: int) -> List[dict]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -59,7 +81,7 @@ async def get_predefined_test_data(id_sesion: int) -> Optional[dict]:
 
 async def insert_random_test_into_prueba_aleatoria(id_session_instance: int, total_tests: int, nivel: str):
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
             random_words = await get_random_words_from_db(cursor, total_tests, nivel)
             print(f"Palabras aleatorias obtenidas: {random_words}")
@@ -77,10 +99,10 @@ async def insert_random_test_into_prueba_aleatoria(id_session_instance: int, tot
     except Exception as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al guardar registrar las pruebas aleatorias en la base de datos"
+            detail = f"Error al guardar registrar las pruebas aleatorias en la base de datos: {str(e)}"
         )
 
-async def get_random_words_from_db(cursor, total_tests: int, nivel: str) -> list:  # ← Cambiado a list
+async def get_random_words_from_db(cursor, total_tests: int, nivel: str) -> list:
     try:
         cursor.execute(
             """
@@ -97,9 +119,9 @@ async def get_random_words_from_db(cursor, total_tests: int, nivel: str) -> list
             detail=f"Error al obtener palabras aleatorias: {str(e)}"
         )
 
-async def get_random_tests_data(id_session_instance: int) -> Optional[dict]:
+async def get_random_tests_data(id_session_instance: int) -> List[dict]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -133,7 +155,7 @@ async def get_random_tests_data(id_session_instance: int) -> Optional[dict]:
 
 async def get_description_categoria_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -156,7 +178,7 @@ async def get_description_categoria_by_palabra(id_palabra: int) -> Optional[str]
 
 async def get_description_uso_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
             cursor.execute(
             """
@@ -179,7 +201,7 @@ async def get_description_uso_by_palabra(id_palabra: int) -> Optional[str]:
 
 async def get_description_accion_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
             cursor.execute(
             """
@@ -202,7 +224,7 @@ async def get_description_accion_by_palabra(id_palabra: int) -> Optional[str]:
 
 async def get_description_propiedad_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
             cursor.execute(
             """
@@ -225,7 +247,7 @@ async def get_description_propiedad_by_palabra(id_palabra: int) -> Optional[str]
 
 async def get_description_localizacion_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -248,7 +270,7 @@ async def get_description_localizacion_by_palabra(id_palabra: int) -> Optional[s
 
 async def get_description_asociacion_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection(database) as conn:
             cursor = conn.cursor()
             cursor.execute(
             """
@@ -290,7 +312,7 @@ async def start_session_endpoint(id_sesion: int, current_user: dict = Depends(ge
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail ="Error al iniciar la sesión"
+            detail = f"Error al iniciar la sesión {e}"
         )
 
 @router.get('/test-data/{id_sesion}', status_code=status.HTTP_200_OK)
@@ -317,7 +339,7 @@ async def start_session(id_sesion: int):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail ="Error al obtener los datos de la prueba"
+            detail = f"Error al obtener los datos de la prueba: {str(e)}"
         )
 
 @router.get('/random-test-data/{id_session_instance}/{total_tests}/{nivel}', status_code=status.HTTP_200_OK)
@@ -380,5 +402,5 @@ async def get_descripciones_by_palabra(id_palabra: int):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail ="Error al obtener las descripciones de la palabra"
+            detail = f"Error al obtener las descripciones de la palabra: {str(e)}"
         )

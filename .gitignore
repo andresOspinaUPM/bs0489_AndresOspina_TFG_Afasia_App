@@ -47,6 +47,8 @@ backend/config/settings.py
 *.db-wal
 backend/afasia_database.db
 backend/*.db
+__pycache__/
+*.pyc
 
 # Editor directories and files
 .vscode/*
