@@ -1,7 +1,7 @@
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import style from './AfasiaTests.module.css';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { TestData, TestDescriptions, TestResult } from '../../types';
 import { useSessionContext } from '../../context/sessionContext';
@@ -29,11 +29,19 @@ function AfasiaTests() {
 	const [testResults, setTestResults] = useState<TestResult[]>([]);
 
 	const sessionInstanceStartedRef = useRef(false);
+	const initialLoadRef = useRef(false);
 
 	// *********************** UseEffects ***************************************
 
+	const memFetchSession = useCallback((id: number) => {
+		fetchSession(id);
+	}, []);
+
 	useEffect(() => {
+		if (initialLoadRef.current) return;
+
 		if (session && session.id_sesion.toString() === sessionId) {
+			initialLoadRef.current = true;
 			console.log('datos de la sesion', session);
 			return;
 		}
@@ -42,15 +50,28 @@ function AfasiaTests() {
 			resetTestsData();
 			const id = parseInt(sessionId, 10);
 			if (!isNaN(id)) {
-				fetchSession(id);
+				initialLoadRef.current = true;
+				resetTestsData();
+				memFetchSession(id);
 				console.log('datos de la sesion', session);
 			}
 		}
-	}, [session, sessionId, fetchSession]);
+	}, [session, sessionId, memFetchSession]);
 
 	useEffect(() => {
-		if (!session || sessionInstanceId) return;
-		if (sessionInstanceStartedRef.current) return;
+		if (!session) {
+			console.log('No hay sesión disponible todavía');
+			return;
+		}
+		if (sessionInstanceId) {
+			console.log('Ya existe una instancia:', sessionInstanceId);
+			return;
+		}
+		if (sessionInstanceStartedRef.current) {
+			console.log('Ya se inició la instancia anteriormente');
+			return;
+		}
+		console.log('Iniciando nueva instancia de sesión...');
 		sessionInstanceStartedRef.current = true;
 		startInstanceOfSession(session.id_sesion);
 	}, [session, sessionInstanceId]);
@@ -165,6 +186,7 @@ function AfasiaTests() {
 	}, [testTime, isTestCompleted, currentTest, currentTestData, session]);
 
 	// *********************** Funciones ***************************************
+
 	const resetTestsData = () => {
 		setLoadingTest(false);
 		setCurrentTest(1);
@@ -193,6 +215,9 @@ function AfasiaTests() {
 			}
 			console.log('Sesión de pruebas iniciada con ID de instancia:', response.payload);
 		} catch (error) {
+			console.log('Error al iniciar instancia de sesion:', error);
+			sessionInstanceStartedRef.current = false;
+			alert('Error al iniciar la sesión de pruebas. Por favor, recarga la página.');
 			throw new Error('Error al iniciar la sesión de pruebas');
 		}
 	};

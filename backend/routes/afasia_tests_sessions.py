@@ -38,7 +38,7 @@ async def get_sessions_list_per_patient_from_db(dni_patient: str) -> list[dict]:
             detail = f"Error al obtener la lista de sesiones del paciente desde la base de datos: {str(e)}"
         )
 
-async def get_session_by_id_from_db(id_session: int) -> dict | None:
+async def get_session_by_id_from_db(id_sesion: int) -> dict | None:
     try:
         with get_db_connection("afasia_database.db") as conn:
             cursor = conn.cursor()
@@ -47,7 +47,7 @@ async def get_session_by_id_from_db(id_session: int) -> dict | None:
                 SELECT * FROM sesion 
                 WHERE id_sesion = ?
                 """,
-                (id_session,)
+                (id_sesion,)
             )
             row = result.fetchone()
             if row is None:
@@ -91,9 +91,12 @@ async def get_patient_sessions_list(current_patient: dict = Depends(get_current_
         )
 
 @router.get('/session/{id_sesion}', status_code=status.HTTP_200_OK)
-async def get_session_by_id(id_session: int):
+async def get_session_by_id(id_sesion: int, current_patient: dict = Depends(get_current_user)):
     try:
-        session = await get_session_by_id_from_db(id_session)
+        print(f'Current patient data: {current_patient}')
+        dni_patient = current_patient.get('dni')
+        print(f'DNI Paciente: {dni_patient}')
+        session = await get_session_by_id_from_db(id_sesion)
         if session is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
