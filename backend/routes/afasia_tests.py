@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from typing import List, Optional
 from database.connection import get_db_connection
 from middleware.user_data import get_current_user
+from models.test_response import TestResponse
 from typing import Optional
 
 router = APIRouter(prefix='/afasia-tests', tags=['afasia_tests'])
@@ -291,6 +292,31 @@ async def get_description_asociacion_by_palabra(id_palabra: int) -> Optional[str
             detail=f"Error al obtener la asociacion de la palabra: {str(e)}"
         )
 
+# # --------------- RESPONSE --------------- #
+async def save_response(test_response: TestResponse) -> Optional[int]:
+    try:
+        with get_db_connection(database) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO respuesta_prueba (id_prueba, fecha_respuesta, tiempo_respuesta, respuesta_correcta )
+                Values (?, ?, ?, ?)
+                """,
+                (
+                    test_respone.id_prueba,
+                    test_response.fecha_respuesta,
+                    test_respuesta.tiempo_respuesta.isoformat(),
+                    test__respuesta.respuesta_correcta
+                )
+            )
+            conn.commit()
+            response_id=cursor.lastrowid
+            return response_id
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al guardar la respuesta de la prueba: {str(e)}"
+        )
 
 # # --------------- ENDPOINTS --------------- #
 
@@ -404,3 +430,29 @@ async def get_descripciones_by_palabra(id_palabra: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al obtener las descripciones de la palabra: {str(e)}"
         )
+
+@router.post('/save-response', status_code=status.HTTP_200_OK)
+async def save_test_response(test_response: TestResponse, current_user: dict = Depends(get_current_user)):
+    try:
+        reponse = await save_response(test_response)
+        if not response:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND
+                detail="No se pudo guargar la respuesta de la prueba en la base de datos"
+            )
+        response_data={
+            "success":True,
+            "message":"Se ha guardado con exito la respuesta de la prueba en la base de datos"
+        }
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=rensponse_data
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al guardar la respuesta de la prueba {e}"
+        )
+

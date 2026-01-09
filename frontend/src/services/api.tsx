@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { TestData, TestDescriptions } from '../types';
+import { TestData, TestDescriptions, TestResponse } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -374,3 +374,18 @@ export const getCurrentTestDescriptions = async (id_palabra: number): Promise<Te
 		throw new Error('Error de conexión al obtener las descripciones de afasia');
 	}
 };
+
+export const saveTestResponse = async(test_response: TestResponse): Promise<ApiResponse> => {
+	try{
+		const response = await api.post<ApiResponse>('/afasia-tests/save-response/',test_response)
+		if(!response.data.success){
+			throw new Error(response.data.message || 'Error al guardar la respuesta de la prueba')
+		}
+		return response.data;
+	}catch (error){
+		if(axios.isAxiosError(error) && error.response){
+			throw new Error(error.response.data.message || 'Error al guardar la respuesta')
+		}
+		throw error
+	}
+}

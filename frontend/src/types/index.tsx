@@ -4,5 +4,6 @@ export type {
     PredefinedSessionTest,
     TestData,
     TestDescriptions,
-    TestResult
+    TestResult,
+    TestResponse
 } from './afasiaInterfaces';

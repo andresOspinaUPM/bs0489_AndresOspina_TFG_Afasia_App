@@ -42,4 +42,11 @@ export interface TestResult{
     palabraObjetivo: string;
     resultado: "acertado" | "fallado";
     tiempo: number;
-}   
+}
+
+export interface TestResponse{
+  id_prueba: number;
+  fecha_respuesta: Date;
+  tiempo_respuesta: number;
+  respuesta_correcta: boolean;
+}
