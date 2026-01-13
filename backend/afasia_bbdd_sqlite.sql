@@ -75,10 +75,19 @@ CREATE TABLE instancia_sesion(
 );
 
 CREATE TABLE registro_prueba_aleatoria(
-    id_prueba INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_prueba_aleatoria INTEGER PRIMARY KEY AUTOINCREMENT,
     id_instancia INTEGER NOT NULL,
     id_palabra INTEGER NOT NULL,
     orden_prueba INTEGER NOT NULL,
+    FOREIGN KEY (id_instancia) REFERENCES instancia_sesion(id_instancia) ON DELETE CASCADE,
+    FOREIGN KEY (id_palabra) REFERENCES palabra(id_palabra) ON DELETE CASCADE
+);
+
+CREATE TABLE registro_ejecucion_prueba(
+    id_ejecucion_prueba INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_instancia INTEGER NOT NULL,
+    id_palabra INTEGER NOT NULL,
+    fecha_ejecucion DATETIME DEFAULT (datetime('now', 'localtime')),
     FOREIGN KEY (id_instancia) REFERENCES instancia_sesion(id_instancia) ON DELETE CASCADE,
     FOREIGN KEY (id_palabra) REFERENCES palabra(id_palabra) ON DELETE CASCADE
 );
@@ -89,7 +98,7 @@ CREATE TABLE respuesta_prueba(
     fecha_respuesta DATETIME DEFAULT (datetime('now', 'localtime')),
     tiempo_respuesta INTEGER NOT NULL,
     respuesta_correcta BOOLEAN NOT NULL,
-    FOREIGN KEY (id_prueba) REFERENCES registro_prueba_generada(id_prueba) ON DELETE CASCADE
+    FOREIGN KEY (id_prueba) REFERENCES registro_ejecucion_prueba(id_ejecucion_prueba) ON DELETE CASCADE
 );
 
 -- Resto de tablas de categorías/propiedades

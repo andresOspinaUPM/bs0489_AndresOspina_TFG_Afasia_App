@@ -375,6 +375,21 @@ export const getCurrentTestDescriptions = async (id_palabra: number): Promise<Te
 	}
 };
 
+export const saveCurrentTestRun = async (id_instance: number, id_word: number): Promise<ApiResponse> => {
+	try{
+		const response = await api.post<ApiResponse>(`/afasia-tests/save-current-test-run/${id_instance}/${id_word}`)
+		if(!response.data.success){
+			throw new Error(response.data.message || 'Error al guardar el registro de la ejecucion del test actual')
+		}
+		return response.data
+	}catch(error){
+		if(axios.isAxiosError(error) && error.response){
+			throw new Error(error.response.data.message || 'Error al guardar el registro de la ejecucion del test actual')
+		}
+		throw error
+	}
+}
+
 export const saveTestResponse = async(test_response: TestResponse): Promise<ApiResponse> => {
 	try{
 		const response = await api.post<ApiResponse>('/afasia-tests/save-response/',test_response)

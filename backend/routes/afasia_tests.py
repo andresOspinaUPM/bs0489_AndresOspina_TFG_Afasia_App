@@ -151,6 +151,28 @@ async def get_random_tests_data(id_session_instance: int) -> List[dict]:
             detail=f"Error al obtener los datos de la prueba: {str(e)}"
         )
 
+# ------------ SAVE EJECUCIONES TESTS ---------------- #
+
+async def save_test_run(id_instance: int, id_word: int) -> Optional[int]:
+    try:
+        with get_db_connection(database) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO registro_ejecucion_prueba (id_instancia, id_palabra)
+                VALUES (?,?)
+                """
+                ,(id_instance, id_word)
+            )
+            conn.commit()
+            response_id = cursor.lastrowid
+            return response_id
+    except Exception as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al guardar al registrar la ejecución de la prueba en la base de datos: {str(e)}"
+        )
+
 
 # ------------ GET DESCRIPCIONES ---------------- #
 
@@ -431,13 +453,40 @@ async def get_descripciones_by_palabra(id_palabra: int):
             detail = f"Error al obtener las descripciones de la palabra: {str(e)}"
         )
 
+@router.post('/save-current-test-run/{id_instance}/{id_word}', status_code=status.HTTP_200_OK)
+async def save_current_test_run(id_instance: int, id_word: int):
+    try:
+        response = await save_test_run(id_instance, id_word)
+        if not response:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No se puedo guardar correctamere el registro de la prueba actual"
+            )
+        response_data={
+            "success":True,
+            "message":"Se ha guardado correctamete el registro de la prueba que se esta ejecutando actualmente"
+        }
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=response_data
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al guardar el registro de la prueba en ejecución {e}"
+        )
+
+
+
 @router.post('/save-response', status_code=status.HTTP_200_OK)
 async def save_test_response(test_response: TestResponse, current_user: dict = Depends(get_current_user)):
     try:
         reponse = await save_response(test_response)
         if not response:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail="No se pudo guargar la respuesta de la prueba en la base de datos"
             )
         response_data={
