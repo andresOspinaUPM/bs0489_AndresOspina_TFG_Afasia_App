@@ -3,7 +3,7 @@ import Form from 'react-bootstrap/Form';
 import style from './AfasiaTests.module.css';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { TestData, TestDescriptions, TestResult } from '../../types';
+import { TestData, TestDescriptions, TestResult, TestResponse } from '../../types';
 import { useSessionContext } from '../../context/sessionContext';
 import {
 	startSessionInstance,
@@ -11,6 +11,7 @@ import {
 	getRandomTestData,
 	saveCurrentTestRun,
 	getCurrentTestDescriptions,
+	saveTestResponse
 } from '../../services/api';
 
 function AfasiaTests() {
@@ -21,6 +22,8 @@ function AfasiaTests() {
 	const [loadingTest, setLoadingTest] = useState<boolean>(false);
 	const loadTestsRef = useRef(false);
 	const [currentTest, setCurrentTest] = useState<number>(1);
+	const currentTestRef = useRef(0);
+	const currentTestRunRef = useRef(0);
 	const [testWordData, setTestWordData] = useState<TestData[]>([]);
 	const [currentTestData, setCurrentTestData] = useState<TestData | null>(null);
 	const [descriptionData, setDescriptionData] = useState<TestDescriptions | null>(null);
@@ -29,7 +32,8 @@ function AfasiaTests() {
 	const [testTime, setTestTime] = useState<number>(0);
 	const [userAnswer, setUserAnswer] = useState<string>('');
 	const [testResults, setTestResults] = useState<TestResult[]>([]);
-	// const [testResponse, setTestResponse] = useState<TestResponse | null>(null)
+	const isTestResponseRef = useRef(false);
+	const testResponseRef = useRef<TestResponse | null>(null)
 
 	const sessionInstanceStartedRef = useRef(false);
 	const initialLoadRef = useRef(false);
@@ -117,19 +121,25 @@ function AfasiaTests() {
 	useEffect(() => {
 		if (testWordData.length === 0) return;
 		if (currentTest < 1 || currentTest > testWordData.length) return;
+		if(currentTestRef.current === currentTest){
+			console.log('prueba actual ya cargada');
+			return
+		}
+		isTestResponseRef.current = false;
+		currentTestRef.current = currentTest;
 		const loadCurrentTestData = async () => {
 			try {
 				const testData = testWordData[currentTest - 1];
 				console.log(`datos de la palabra actual ${testData.nombre_palabra}:`, testData);
 				if (!testData) {
-					throw new Error(`No se ha encontrado la prueba ${currentTest}`);
+					console.log(`No se ha encontrado la prueba ${currentTest}`);
 				}
 				setCurrentTestData(testData);
 				if (testData.id_palabra) {
-					console.log(`se guarda registro de la ejecucion de la prueba`)
-					const saveCurrentTest = await saveCurrentTestRun(sessionInstanceId as number, testData.id_palabra)
-					if(!saveCurrentTest){
-						throw new Error(`Error al guardar el registro de la prueba actual`)
+					currentTestRunRef.current = await saveCurrentTestRun(sessionInstanceId as number, testData.id_palabra)
+					console.log(`se guarda registro de la ejecucion de la prueba con id: ${currentTestRunRef.current}`)
+					if(!saveCurrentTestRun){
+						console.log(`Error al guardar el registro de la prueba actual`)
 					}
 					console.log(`Se buscaran las decripciones de la palabra con ID: ${testData.id_palabra}`);
 					const descriptions = await getCurrentTestDescriptions(testData.id_palabra);
@@ -149,13 +159,18 @@ function AfasiaTests() {
 	}, [currentTest, testWordData.length, sessionInstanceId]);
 
 	useEffect(() => {
-		if (isTestCompleted || testWordData.length === 0) return;
+		if (isTestCompleted) return;
 		const testInterval = setInterval(() => {
 			setTestTime((prev) => prev + 1);
 		}, 1000);
 
 		return () => clearInterval(testInterval);
-	}, [isTestCompleted, testWordData]);
+	}, [isTestCompleted]);
+
+	useEffect(() => {
+		setTestTime(0);
+		isTestResponseRef.current = false;
+}, [currentTest]);
 
 	useEffect(() => {
 		if (!currentTestData || !session) return;
@@ -175,11 +190,14 @@ function AfasiaTests() {
 	}, [testTime, currentTestData, session, session?.tiempo_limite_por_prueba]);
 
 	useEffect(() => {
-		if (!currentTestData || !session) {
-			return;
+		if(isTestResponseRef.current){
+			console.log("la prueba ya se ha respondido");
+			return
 		}
+		if (!currentTestData || !session) return;
 		const timeLimit = session.tiempo_limite_por_prueba;
-		if (testTime === timeLimit && !isTestCompleted) {
+		if (testTime >= timeLimit && !isTestCompleted && !isTestResponseRef.current) {
+			isTestResponseRef.current = true;
 			setTestResults((prevResults) => [
 				...prevResults,
 				{
@@ -188,13 +206,19 @@ function AfasiaTests() {
 					tiempo: testTime,
 				},
 			]);
-			if (session?.cantidad_pruebas && currentTest < session?.cantidad_pruebas) {
+			testResponseRef. current = {
+				id_prueba: currentTestRunRef.current,
+				tiempo_respuesta: testTime,
+				respuesta_correcta: false
+			};
+			saveResponse(testResponseRef.current)
+			if (session?.cantidad_pruebas && currentTestRef.current < session?.cantidad_pruebas) {
 				setCurrentTest((prevCurrentTest) => prevCurrentTest + 1);
 			} else {
 				setIsTestCompleted(true);
 			}
 		}
-	}, [testTime, isTestCompleted, currentTest, currentTestData, session]);
+	}, [testTime, isTestCompleted, session]);
 
 	// *********************** Funciones ***************************************
 
@@ -233,6 +257,17 @@ function AfasiaTests() {
 		}
 	};
 
+	const saveResponse = async (saveCurrentTestResponse: TestResponse) =>{
+		try{
+			const response = await saveTestResponse(saveCurrentTestResponse);
+			if(!response.success){
+				throw new Error ('ha habido un error al guardar la respuesta de la prueba actual')
+			}
+		}catch(error){
+			console.log('Error al guardar la respuesta de la prueba', error)
+		}
+	}
+
 	const handleUserAnswer = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setUserAnswer(e.target.value);
 	};
@@ -249,6 +284,13 @@ function AfasiaTests() {
 				...prevResults,
 				{ palabraObjetivo: correctWordNormalized, resultado: 'acertado', tiempo: testTime },
 			]);
+			isTestResponseRef.current = true;
+			testResponseRef. current = {
+				id_prueba: currentTestRunRef.current,
+				tiempo_respuesta: testTime,
+				respuesta_correcta: true
+			};
+			saveResponse(testResponseRef.current)
 			if (session?.cantidad_pruebas && currentTest < session?.cantidad_pruebas) {
 				setCurrentTest((prevCurrentTest) => prevCurrentTest + 1);
 			} else {

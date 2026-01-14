@@ -83,6 +83,10 @@ export interface PatientSessions {
 	imagenes_aleatorias: boolean;
 }
 
+export interface CurrentTestRun{
+	id_ejecucion_prueba: number;
+}
+
 export type SessionsListResponse = ApiResponse<PatientSessions[]>;
 
 export type UserResponseData = ApiResponse<UserResponse>;
@@ -90,6 +94,8 @@ export type UserResponseData = ApiResponse<UserResponse>;
 export type DoctorListResponse = ApiResponse<DoctorList[]>;
 
 export type PatientsListResponse = ApiResponse<PatientsList[]>;
+
+export type CurrentTestRunResponse = ApiResponse<CurrentTestRun>
 
 api.interceptors.request.use(
 	(config) => {
@@ -375,13 +381,16 @@ export const getCurrentTestDescriptions = async (id_palabra: number): Promise<Te
 	}
 };
 
-export const saveCurrentTestRun = async (id_instance: number, id_word: number): Promise<ApiResponse> => {
+export const saveCurrentTestRun = async (id_instance: number, id_word: number): Promise<number> => {
 	try{
 		const response = await api.post<ApiResponse>(`/afasia-tests/save-current-test-run/${id_instance}/${id_word}`)
 		if(!response.data.success){
 			throw new Error(response.data.message || 'Error al guardar el registro de la ejecucion del test actual')
 		}
-		return response.data
+		if(typeof response.data.payload !== 'number'){
+			throw new Error('No se puedo obtener el id de la ajecución de la prueba actual')
+		}
+		return response.data.payload
 	}catch(error){
 		if(axios.isAxiosError(error) && error.response){
 			throw new Error(error.response.data.message || 'Error al guardar el registro de la ejecucion del test actual')

@@ -321,14 +321,13 @@ async def save_response(test_response: TestResponse) -> Optional[int]:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                INSERT INTO respuesta_prueba (id_prueba, fecha_respuesta, tiempo_respuesta, respuesta_correcta )
-                Values (?, ?, ?, ?)
+                INSERT INTO respuesta_prueba (id_prueba, tiempo_respuesta, respuesta_correcta )
+                Values (?, ?, ?)
                 """,
                 (
-                    test_respone.id_prueba,
-                    test_response.fecha_respuesta,
-                    test_respuesta.tiempo_respuesta.isoformat(),
-                    test__respuesta.respuesta_correcta
+                    test_response.id_prueba,
+                    test_response.tiempo_respuesta,
+                    test_response.respuesta_correcta
                 )
             )
             conn.commit()
@@ -464,7 +463,8 @@ async def save_current_test_run(id_instance: int, id_word: int):
             )
         response_data={
             "success":True,
-            "message":"Se ha guardado correctamete el registro de la prueba que se esta ejecutando actualmente"
+            "message":"Se ha guardado correctamete el registro de la prueba que se esta ejecutando actualmente",
+            "payload": response
         }
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -483,7 +483,7 @@ async def save_current_test_run(id_instance: int, id_word: int):
 @router.post('/save-response', status_code=status.HTTP_200_OK)
 async def save_test_response(test_response: TestResponse, current_user: dict = Depends(get_current_user)):
     try:
-        reponse = await save_response(test_response)
+        response = await save_response(test_response)
         if not response:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -495,7 +495,7 @@ async def save_test_response(test_response: TestResponse, current_user: dict = D
         }
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content=rensponse_data
+            content=response_data
         )
     except HTTPException:
         raise
