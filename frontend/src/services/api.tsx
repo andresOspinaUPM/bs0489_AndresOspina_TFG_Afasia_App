@@ -413,3 +413,18 @@ export const saveTestResponse = async(test_response: TestResponse): Promise<ApiR
 		throw error
 	}
 }
+
+export const saveInstanceSessionAsCompleted = async(id_session_instance: number): Promise<ApiResponse> => {
+	try{
+		const response = await api.post<ApiResponse>(`/afasia-test/set-session-completed/${id_session_instance}`)
+		if(!response.data.success){
+			throw new Error(response.data.message || "Error al marcar la instancia de la sesion como completada")
+		}
+		return response.data;
+	}catch(error){
+		if(axios.isAxiosError(error) && error.response){
+			throw new Error(error.response.data.message || 'Error al ingresar instancia como completada')
+		}
+		throw error
+	}
+}

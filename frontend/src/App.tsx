@@ -54,9 +54,10 @@ function App() {
             <main className={style["main-content"]}>
               <Routes>
                 <Route path="/inicio" element={<Home />}/>
-                <Route path="/sesiones-pruebas" element={<PatientSessionsList />}/>
+                <Route path="/sesiones-pruebas" element={<PatientSessionsList type='pruebas' />}/>
                 <Route path="/pruebas/:sessionId" element={<AfasiaTests />}/>
-                <Route path="/registros" element={<Records />}/>
+                <Route path="/sesiones-registros" element={<PatientSessionsList type='registros' />}></Route>
+                <Route path="/registros/:sessionId" element={<Records />}/>
               </Routes>
             </main>
             <Footer />

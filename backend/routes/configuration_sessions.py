@@ -42,7 +42,7 @@ async def insert_sesion_in_db (dni_doctor: str, config_data: dict):
                 """
                 ,
                 (
-                    f"Sesion_{nivel}_{cantidad_pruebas}pruebas",
+                    f"Sesion {nivel} - {cantidad_pruebas} pruebas",
                     nivel,
                     cantidad_pruebas,
                     tiempo_limite_por_prueba,

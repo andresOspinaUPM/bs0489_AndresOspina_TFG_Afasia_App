@@ -6,8 +6,22 @@ import { Session } from "../../types";
 import Table from 'react-bootstrap/esm/Table';
 import style from './PatientSessionsList.module.css';
 
+type ContentType = 'pruebas' | 'registros'
 
-function PatientSessionsList() {
+function PatientSessionsList({type}: {type:ContentType}) {
+
+  const contentConfig = {
+    pruebas:{
+      linkTitle: 'Iniciar Prueba',
+      linkUrl: '/paciente/pruebas/'
+    },
+    registros:{
+      linkTitle: 'Ver Registros de la Prueba',
+      linkUrl: '/paciente/registros/'
+    }
+  }
+
+  const config = contentConfig[type]
 	
   const [patientSessions, setPatientSessions] = useState<PatientSessions[]>([]);
 
@@ -35,7 +49,7 @@ function PatientSessionsList() {
   return (
     <div className={style['container']}>
       <div className={style['table-container']}>
-        <h1>Lista de Pruebas del Paciente</h1>
+        <h1>Listado de Pruebas del Paciente</h1>
         <Table striped className={style['sessions-table']}>
           <thead>
             <tr>
@@ -47,9 +61,9 @@ function PatientSessionsList() {
               <tr key={session.id_sesion}>
                 <td>{session.nombre_sesion}</td>
                 <td>
-                  <Link to={`/paciente/pruebas/${session.id_sesion}`}
+                  <Link to={`${config.linkUrl}${session.id_sesion}`}
                     onClick={() => handleStartSession(session)}
-                  >Iniciar Prueba</Link>
+                  >{config.linkTitle}</Link>
                 </td>
               </tr>
             ))}

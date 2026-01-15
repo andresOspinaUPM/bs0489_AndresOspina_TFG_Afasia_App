@@ -6,4 +6,6 @@ class TestResponse(BaseModel):
   tiempo_respuesta: int
   respuesta_correcta: bool
 
-  
+class SessionIntanceCompleted(BaseModel):
+  fecha_completada: datetime
+  completada: bool

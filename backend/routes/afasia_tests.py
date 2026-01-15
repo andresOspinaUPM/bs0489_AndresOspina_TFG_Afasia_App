@@ -3,8 +3,9 @@ from fastapi.responses import JSONResponse
 from typing import List, Optional
 from database.connection import get_db_connection
 from middleware.user_data import get_current_user
-from models.test_response import TestResponse
+from models.test_response import TestResponse, SessionIntanceCompleted
 from typing import Optional
+from datetime import datetime
 
 router = APIRouter(prefix='/afasia-tests', tags=['afasia_tests'])
 database = "afasia_database.db"
@@ -339,6 +340,25 @@ async def save_response(test_response: TestResponse) -> Optional[int]:
             detail=f"Error al guardar la respuesta de la prueba: {str(e)}"
         )
 
+async def save_session_instance_as_completed(id_session_instance: int, date: str, is_completed: bool):
+    try:
+        with get_db_connection(database) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE instancia_sesion
+                SET fecha_fin = ?, completada = ?
+                WHERE id_instancia = ?
+                """
+                ,(date, is_completed, id_session_instance)
+            )
+            conn.commit()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al guardar la instancia de la sesison como completada: {str(e)}"
+        )
+
 # # --------------- ENDPOINTS --------------- #
 
 @router.post('/start-session-instance/{id_sesion}', status_code=status.HTTP_201_CREATED)
@@ -505,3 +525,25 @@ async def save_test_response(test_response: TestResponse, current_user: dict = D
             detail = f"Error al guardar la respuesta de la prueba {e}"
         )
 
+@router.post('/set-session-completed/{id_session_instance}', status_code=status.HTTP_200_OK)
+async def save_session_as_completed(id_session_instance: int, sessionCompleted: SessionIntanceCompleted, current_user: dict = Depends(get_current_user)):
+    try:
+        date = datetime.now()
+        date_str = date.strftime('%Y-%m-%d %H:%M:%S')
+        is_completed = True
+        await save_session_instance_as_completed(id_session_instance, date_str, is_completed)
+        response_data={
+            "success":True,
+            "message":"Instancia de la sesion guardada como completada correctamente"
+        }
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=response_data
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al marcar como completada la instancia de la sesion {e}"
+        )

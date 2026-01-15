@@ -11,7 +11,8 @@ import {
 	getRandomTestData,
 	saveCurrentTestRun,
 	getCurrentTestDescriptions,
-	saveTestResponse
+	saveTestResponse,
+	saveInstanceSessionAsCompleted
 } from '../../services/api';
 
 function AfasiaTests() {
@@ -206,7 +207,7 @@ function AfasiaTests() {
 					tiempo: testTime,
 				},
 			]);
-			testResponseRef. current = {
+			testResponseRef.current = {
 				id_prueba: currentTestRunRef.current,
 				tiempo_respuesta: testTime,
 				respuesta_correcta: false
@@ -215,6 +216,9 @@ function AfasiaTests() {
 			if (session?.cantidad_pruebas && currentTestRef.current < session?.cantidad_pruebas) {
 				setCurrentTest((prevCurrentTest) => prevCurrentTest + 1);
 			} else {
+				if (sessionInstanceId != null){
+					saveSessionInstanceAsCompleted(sessionInstanceId)
+				}
 				setIsTestCompleted(true);
 			}
 		}
@@ -268,6 +272,17 @@ function AfasiaTests() {
 		}
 	}
 
+	const saveSessionInstanceAsCompleted = async(sessionInstanceId: number) => {
+		try{
+			const response = await saveInstanceSessionAsCompleted(sessionInstanceId)
+			if(!response.success){
+				throw new Error ('Error al guardas la sesion como completada')
+			}
+		}catch(error){
+			console.log('Error al marcar la instancia de la session como completada', error)
+		}
+	}
+
 	const handleUserAnswer = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setUserAnswer(e.target.value);
 	};
@@ -294,6 +309,9 @@ function AfasiaTests() {
 			if (session?.cantidad_pruebas && currentTest < session?.cantidad_pruebas) {
 				setCurrentTest((prevCurrentTest) => prevCurrentTest + 1);
 			} else {
+				if (sessionInstanceId != null){
+					saveSessionInstanceAsCompleted(sessionInstanceId)
+				}
 				setIsTestCompleted(true);
 			}
 			setUserAnswer('');

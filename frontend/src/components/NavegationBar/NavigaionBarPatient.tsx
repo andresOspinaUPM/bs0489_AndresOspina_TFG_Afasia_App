@@ -40,7 +40,7 @@ function NavigationBarPatient() {
             </div>
             <div className={style["link-container"]}>
               <Image src={icons.registros} alt="Registros" className={style["image-icons"]} />
-              <Nav.Link as={Link} to="/paciente/registros" className="text-white">
+              <Nav.Link as={Link} to="/paciente/sesiones-registros" className="text-white">
                 Registros
               </Nav.Link>
             </div>
