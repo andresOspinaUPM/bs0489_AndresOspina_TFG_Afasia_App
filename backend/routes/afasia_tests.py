@@ -341,6 +341,7 @@ async def save_response(test_response: TestResponse) -> Optional[int]:
         )
 
 async def save_session_instance_as_completed(id_session_instance: int, date: str, is_completed: bool):
+    print(f'BE id_intancia: {id_session_instance}, date: {date}, is_completed: {is_completed}')
     try:
         with get_db_connection(database) as conn:
             cursor = conn.cursor()
@@ -526,7 +527,7 @@ async def save_test_response(test_response: TestResponse, current_user: dict = D
         )
 
 @router.post('/set-session-completed/{id_session_instance}', status_code=status.HTTP_200_OK)
-async def save_session_as_completed(id_session_instance: int, sessionCompleted: SessionIntanceCompleted, current_user: dict = Depends(get_current_user)):
+async def save_session_as_completed(id_session_instance: int, current_user: dict = Depends(get_current_user)):
     try:
         date = datetime.now()
         date_str = date.strftime('%Y-%m-%d %H:%M:%S')
@@ -536,14 +537,11 @@ async def save_session_as_completed(id_session_instance: int, sessionCompleted: 
             "success":True,
             "message":"Instancia de la sesion guardada como completada correctamente"
         }
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content=response_data
-        )
+        return response_data
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al marcar como completada la instancia de la sesion {e}"
+            detail = f"BE - Error al marcar como completada la instancia de la sesion {e}"
         )

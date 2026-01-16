@@ -5,5 +5,7 @@ export type {
     TestData,
     TestDescriptions,
     TestResult,
-    TestResponse
+    TestResponse,
+    InstancesRecords,
+    SessionIntanceRecords
 } from './afasiaInterfaces';

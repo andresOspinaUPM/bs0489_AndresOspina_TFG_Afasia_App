@@ -274,6 +274,7 @@ function AfasiaTests() {
 
 	const saveSessionInstanceAsCompleted = async(sessionInstanceId: number) => {
 		try{
+			console.log(`se intenta marcar como completada la instancia de sesion: ${sessionInstanceId}`);
 			const response = await saveInstanceSessionAsCompleted(sessionInstanceId)
 			if(!response.success){
 				throw new Error ('Error al guardas la sesion como completada')

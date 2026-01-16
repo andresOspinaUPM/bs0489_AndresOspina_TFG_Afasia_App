@@ -49,3 +49,15 @@ export interface TestResponse{
   tiempo_respuesta: number;
   respuesta_correcta: boolean;
 }
+
+export interface InstancesRecords{
+  nombre_palabra: string;
+  fecha_respuesta: string;
+  tiempo_respuesta: number;
+  respuesta_correcta: boolean
+}
+
+export interface SessionIntanceRecords{
+  id_instancia: number;
+  respuestas: InstancesRecords[]
+}

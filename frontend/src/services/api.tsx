@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { TestData, TestDescriptions, TestResponse } from '../types';
+import { TestData, TestDescriptions, TestResponse, SessionIntanceRecords } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -96,6 +96,7 @@ export type DoctorListResponse = ApiResponse<DoctorList[]>;
 export type PatientsListResponse = ApiResponse<PatientsList[]>;
 
 export type CurrentTestRunResponse = ApiResponse<CurrentTestRun>
+
 
 api.interceptors.request.use(
 	(config) => {
@@ -416,7 +417,7 @@ export const saveTestResponse = async(test_response: TestResponse): Promise<ApiR
 
 export const saveInstanceSessionAsCompleted = async(id_session_instance: number): Promise<ApiResponse> => {
 	try{
-		const response = await api.post<ApiResponse>(`/afasia-test/set-session-completed/${id_session_instance}`)
+		const response = await api.post<ApiResponse>(`/afasia-tests/set-session-completed/${id_session_instance}`)
 		if(!response.data.success){
 			throw new Error(response.data.message || "Error al marcar la instancia de la sesion como completada")
 		}
@@ -424,6 +425,40 @@ export const saveInstanceSessionAsCompleted = async(id_session_instance: number)
 	}catch(error){
 		if(axios.isAxiosError(error) && error.response){
 			throw new Error(error.response.data.message || 'Error al ingresar instancia como completada')
+		}
+		throw error
+	}
+}
+
+
+export const isSessionInstanceCompleted = async(sessionId: number): Promise<ApiResponse> => {
+	try{
+		const response = await api.get<ApiResponse>(`/afasia-test-records/session-instance-completed/${sessionId}`)
+		if(!response.data.success){
+			throw new Error(response.data.message || "Error al obtener instancia de sesion completada")
+		}
+		return response.data
+	}catch(error){
+		if(axios.isAxiosError(error) && error.response){
+			throw new Error(error.response.data.detail || "Error al obtener instancia de sesion completada")
+		}
+		throw error
+	}
+}
+
+export const getInstancesSessionRecords = async(sessionId: number): Promise<SessionIntanceRecords[]> => {
+	try{
+		const response = await api.get<ApiResponse<SessionIntanceRecords[]>>(`/afasia-test-records/get-instances-records/${sessionId}`)
+		if(!response.data.success){
+			throw new Error(response.data.message || "Error al obtener los registros de la sesion")
+		}
+		if(!response.data.payload){
+			throw new Error('No se encontraron los registros de las instancias de sesión')
+		}
+		return response.data.payload
+	}catch(error){
+		if(axios.isAxiosError(error) && error.response){
+			throw new Error(error.response.data.detail || "Error al obtener los registros de las intancias de la sesion")
 		}
 		throw error
 	}
