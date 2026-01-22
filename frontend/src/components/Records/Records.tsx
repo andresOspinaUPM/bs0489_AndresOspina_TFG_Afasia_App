@@ -78,8 +78,10 @@ function Records() {
 	if(!existSessionInstance){
 		return (
 			<div className={style['main-records-container']}>
-				<div style={{ textAlign: 'center', padding: '50px' }}>
-					<h3>No se han completado ninguna prueba para esta sesión, por favor complete en primer lugar un sesión antes de ver sus registros</h3>
+				<div className={style['table-container']}>
+					<h1>Registros pruebas</h1>
+					<br/>
+					<h5>No se ha completado ninguna prueba para esta sesión, por favor complete en primer lugar una sesión antes de ver sus registros.</h5>
 				</div>
 			</div>
 		);

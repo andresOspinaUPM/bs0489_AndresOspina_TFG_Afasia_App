@@ -1,8 +1,10 @@
 import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import Table from 'react-bootstrap/Table';
 import Form from 'react-bootstrap/Form';
 import style from './AfasiaTests.module.css';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { TestData, TestDescriptions, TestResult, TestResponse } from '../../types';
 import { useSessionContext } from '../../context/sessionContext';
 import {
@@ -35,6 +37,8 @@ function AfasiaTests() {
 	const [testResults, setTestResults] = useState<TestResult[]>([]);
 	const isTestResponseRef = useRef(false);
 	const testResponseRef = useRef<TestResponse | null>(null)
+	const [showModal, setShowModal] = useState(false);
+	const navigate = useNavigate();
 
 	const sessionInstanceStartedRef = useRef(false);
 	const initialLoadRef = useRef(false);
@@ -220,6 +224,7 @@ function AfasiaTests() {
 					saveSessionInstanceAsCompleted(sessionInstanceId)
 				}
 				setIsTestCompleted(true);
+				setShowModal(true);
 			}
 		}
 	}, [testTime, isTestCompleted, session]);
@@ -314,12 +319,18 @@ function AfasiaTests() {
 					saveSessionInstanceAsCompleted(sessionInstanceId)
 				}
 				setIsTestCompleted(true);
+				setShowModal(true);
 			}
 			setUserAnswer('');
 		} else {
 			setUserAnswer('');
 		}
 	};
+
+	const handleCloseModal = () => {
+		setShowModal(false);
+		navigate('/paciente/sesiones-pruebas');
+	}
 
 	// *********************** HTML ***************************************
 
@@ -341,6 +352,45 @@ function AfasiaTests() {
 				</div>
 			</div>
 		);
+	}
+
+	if(isTestCompleted){
+		return(
+			<div className={style['main-test-container']}>
+				<Modal show={showModal} onHide={() => {handleCloseModal()}} backdrop="static" centered>
+					<Modal.Header>
+						<Modal.Title>Se ha completado la prueba exitosamente</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<h4>Has completado la prueba con los siguientes resultados</h4>
+						<br/>
+						<Table striped>
+							<thead>
+								<tr>
+									<th>Palabra</th>
+									<th>Tiempo</th>
+									<th>Resultado</th>
+								</tr>
+							</thead>
+							<tbody>
+								{
+								testResults.map((resultado, index) => (
+									<tr key= {`${index}`}>
+										<td>{resultado.palabraObjetivo}</td>
+										<td>{formatTime(resultado.tiempo)}</td>
+										<td>{resultado.resultado}</td>
+									</tr>
+								))
+								}
+							</tbody>
+						</Table>
+					</Modal.Body>
+					<Modal.Footer>
+						<Button variant='primary' onClick={() => {handleCloseModal()}}>Cerrar</Button>
+					</Modal.Footer>
+				</Modal>
+			</div>
+		)
 	}
 
 	return (
