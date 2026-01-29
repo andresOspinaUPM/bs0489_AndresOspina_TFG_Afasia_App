@@ -58,7 +58,9 @@ function PatientsListForDoctorRecords() {
         <h1>Listado de Pacientes</h1>
         <Table striped className={style['doctor-patients-table']}>
           <thead>
-            <th>Nombre Paciente</th>
+            <tr>
+              <th>Nombre Paciente</th>
+            </tr>
           </thead>
           <tbody>
             {patientsList.map((patient) => (

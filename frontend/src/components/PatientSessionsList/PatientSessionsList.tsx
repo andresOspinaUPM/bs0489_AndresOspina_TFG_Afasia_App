@@ -11,6 +11,15 @@ type ContentType = 'pruebas' | 'registrosPaciente' | 'registrosDoctor'
 
 function PatientSessionsList({type}: {type:ContentType, doctor?:boolean}) {
 
+  
+
+	
+  const [patientSessions, setPatientSessions] = useState<PatientSessions[]>([]);
+  
+  const {setSession} = useSessionContext();
+  
+  const {selectedPatient} = useDoctorPatientContext();
+
   const contentConfig = {
     pruebas:{
       linkTitle: 'Iniciar Prueba',
@@ -22,18 +31,12 @@ function PatientSessionsList({type}: {type:ContentType, doctor?:boolean}) {
     },
     registrosDoctor:{
       linkTitle: 'Ver Registros',
-      linkUrl: '/doctor/registros-paciente/'
+      linkUrl: `/doctor/registros-paciente/${selectedPatient?.nombre}/`
     }
   }
 
   const config = contentConfig[type]
-	
-  const [patientSessions, setPatientSessions] = useState<PatientSessions[]>([]);
-
-  const {setSession} = useSessionContext();
-
-  const {selectedPatient} = useDoctorPatientContext();
-
+  
   useEffect(() => {
     getPatientSessions();
   }, []);
