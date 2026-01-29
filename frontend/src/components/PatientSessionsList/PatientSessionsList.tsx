@@ -2,22 +2,27 @@ import { Link } from "react-router-dom";
 import {useState, useEffect} from 'react'
 import {getSessionsListPerPatient, PatientSessions} from '../../services/api';
 import { useSessionContext } from "../../context/sessionContext";
+import { useDoctorPatientContext } from "../../context/doctorPatientContext";
 import { Session } from "../../types";
 import Table from 'react-bootstrap/esm/Table';
 import style from './PatientSessionsList.module.css';
 
-type ContentType = 'pruebas' | 'registros'
+type ContentType = 'pruebas' | 'registrosPaciente' | 'registrosDoctor'
 
-function PatientSessionsList({type}: {type:ContentType}) {
+function PatientSessionsList({type}: {type:ContentType, doctor?:boolean}) {
 
   const contentConfig = {
     pruebas:{
       linkTitle: 'Iniciar Prueba',
       linkUrl: '/paciente/pruebas/'
     },
-    registros:{
+    registrosPaciente:{
       linkTitle: 'Ver Registros de la Prueba',
       linkUrl: '/paciente/registros/'
+    },
+    registrosDoctor:{
+      linkTitle: 'Ver Registros',
+      linkUrl: '/doctor/registros-paciente/'
     }
   }
 
@@ -27,13 +32,17 @@ function PatientSessionsList({type}: {type:ContentType}) {
 
   const {setSession} = useSessionContext();
 
+  const {selectedPatient} = useDoctorPatientContext();
+
   useEffect(() => {
     getPatientSessions();
   }, []);
 
    async function getPatientSessions(){
     try{
-      const response = await getSessionsListPerPatient();
+      console.log('Se ha enviado el siguiente contentConfig: ', config)
+      const response = type === 'registrosDoctor' ? await getSessionsListPerPatient(selectedPatient?.dni) : await getSessionsListPerPatient();
+      // const response = await getSessionsListPerPatient();
       setPatientSessions(response);
       console.log('Sesiones del paciente obtenidas:', response);
     }catch(error){

@@ -1,3 +1,15 @@
+export interface PatientData {
+	dni: string;
+	nombre: string;
+	apellidos: string;
+}
+
+export interface PatientContextType{
+  selectedPatient: PatientData | null;
+  setSelectedPatient: (patient: PatientData | null) => void;
+  clearSelectedPatient: () => void;
+}
+
 export interface Session{
   id_sesion: number;
   nombre_sesion: string;

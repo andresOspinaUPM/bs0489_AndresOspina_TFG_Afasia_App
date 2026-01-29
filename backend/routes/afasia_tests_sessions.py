@@ -1,4 +1,6 @@
-from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi import APIRouter, status, HTTPException, Depends, Body
+from pydantic import BaseModel
+from typing import Optional
 from fastapi.responses import JSONResponse
 from database.connection import get_db_connection
 from middleware.user_data import get_current_user
@@ -68,11 +70,14 @@ async def get_session_by_id_from_db(id_sesion: int) -> dict | None:
         )
 ############################### ENDIPOINT ###############################
 
-@router.get('/patient-sessions-list', status_code=status.HTTP_200_OK)
-async def get_patient_sessions_list(current_patient: dict = Depends(get_current_user)):
+class PatientSessionsRequest(BaseModel):
+    patient_dni: Optional[str] = None
+
+@router.post('/patient-sessions-list', status_code=status.HTTP_200_OK)
+async def get_patient_sessions_list(request: PatientSessionsRequest, current_patient: dict = Depends(get_current_user)):
     try:
-        print(f'Current patient data: {current_patient}')
-        dni_patient = current_patient.get('dni')
+        dni_patient = request.patient_dni if request.patient_dni else current_patient.get('dni') 
+        # dni_patient = current_patient.get('dni')
         print(f'DNI Paciente: {dni_patient}')
         sessions_list = await get_sessions_list_per_patient_from_db(dni_patient)
         response_data = {

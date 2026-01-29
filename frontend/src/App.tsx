@@ -5,7 +5,7 @@ import NavigationBarDoctors from "./components/NavegationBar/NavigationBarDoctor
 import Home from "./components/Home/Home";
 import PatientSessionsList from "./components/PatientSessionsList/PatientSessionsList";
 import AfasiaTests from "./components/AfasiaTests/AfasiaTests";
-import DoctorPatients from "./components/DoctorPatients/DoctorPatients";
+import DoctorPatientsList from "./components/DoctorPatientsList/DoctorPatientsList";
 import Records from "./components/Records/Records";
 import Login from "./components/Login/Login";
 import RegisterPatients from "./components/RegisterPatients/RegisterPatients";
@@ -56,7 +56,7 @@ function App() {
                 <Route path="/inicio" element={<Home />}/>
                 <Route path="/sesiones-pruebas" element={<PatientSessionsList type='pruebas' />}/>
                 <Route path="/pruebas/:sessionId" element={<AfasiaTests />}/>
-                <Route path="/sesiones-registros" element={<PatientSessionsList type='registros' />}></Route>
+                <Route path="/sesiones-registros" element={<PatientSessionsList type='registrosPaciente' />}/>
                 <Route path="/registros/:sessionId" element={<Records />}/>
               </Routes>
             </main>
@@ -72,8 +72,9 @@ function App() {
                 <Route path="/configuracion-pruebas" element={<ConfigurationSessions />}/>
                 <Route path="/inicio" element={<Home />}/>
                 <Route path="/pruebas/:sessionId" element={<AfasiaTests />}/>
-                <Route path="/pacientes" element={<DoctorPatients />}/>
-                <Route path="/pacientes/:pacienteId/registros" element={<Records />}/>
+                <Route path="/pacientes" element={<DoctorPatientsList />}/>
+                <Route path="/pacientes/:nombre-paciente/lista-pruebas" element={<PatientSessionsList type='registrosDoctor' />}/>
+                <Route path="/registros-paciente/:sessionId" element={<Records />}/>
               </Routes>
             </main>
             <Footer />

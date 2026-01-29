@@ -60,7 +60,9 @@ export interface DoctorList {
 	apellidos: string;
 }
 
-export interface PatientsList {
+//esta interfaz se ha puesto en afasiaInterfaces
+//ToDo: ver en donde se ha utilizado a parte de este api y modificar (refactorizar)
+export interface PatientsList { 
 	dni: string;
 	nombre: string;
 	apellidos: string;
@@ -267,9 +269,10 @@ export const configureAfasiaSessions = async (configData: AfasiaTestConfig): Pro
 	}
 };
 
-export const getSessionsListPerPatient = async (): Promise<PatientSessions[]> => {
+export const getSessionsListPerPatient = async (dniPaciente ?:string): Promise<PatientSessions[]> => {
 	try {
-		const response = await api.get<SessionsListResponse>(`/afasia-tests-sessions/patient-sessions-list`);
+		const requestBody = dniPaciente ? { patient_dni: dniPaciente } : {};
+		const response = await api.post<SessionsListResponse>('/afasia-tests-sessions/patient-sessions-list', requestBody);
 		if (!response.data.success) {
 			throw new Error(response.data.message || 'Error al obtener la lista de sesiones del paciente');
 		}

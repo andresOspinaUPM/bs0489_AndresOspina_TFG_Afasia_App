@@ -1,4 +1,6 @@
 export type {
+    PatientData,
+    PatientContextType,
     Session,
     SessionContextType,
     PredefinedSessionTest,
