@@ -466,3 +466,21 @@ export const getInstancesSessionRecords = async(sessionId: number): Promise<Sess
 		throw error
 	}
 }
+
+export const removeSessionInstance = async(sessionInstanceId: number): Promise<ApiResponse> => {
+	try{
+		const response = await api.delete<ApiResponse>(`/afasia-tests/remove-session-instance/${sessionInstanceId}`)
+		if(!response.data){
+			throw new Error("Respuesta vacía del servidor");
+		}		
+		if(!response.data.success){
+			throw new Error(response.data.message || `Error al aliminar la instancia de sesion con id: ${sessionInstanceId}`)
+		}
+		return response.data
+	}catch(error){
+		if(axios.isAxiosError(error) && error.response){
+			throw new Error(error.response.data.detail || "Error al aliminar la instancia de sesion")
+		}
+		throw error
+	}
+}

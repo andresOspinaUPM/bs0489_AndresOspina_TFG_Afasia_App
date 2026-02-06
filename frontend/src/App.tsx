@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import NavigationBar from "./components/NavegationBar/NavegationBar";
 import NavigationBarPatient from "./components/NavegationBar/NavigaionBarPatient";
 import NavigationBarDoctors from "./components/NavegationBar/NavigationBarDoctors";
+import NavigationalModal from "./components/NavigationalModal/NavigationalModal";
 import Home from "./components/Home/Home";
 import PatientSessionsList from "./components/PatientSessionsList/PatientSessionsList";
 import AfasiaTests from "./components/AfasiaTests/AfasiaTests";
@@ -30,6 +31,7 @@ function App() {
   }
   return (
     <div className={style["app-layout"]}>
+      <NavigationalModal/>
       <Routes>
         
         <Route path="/*" element={

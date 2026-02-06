@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TestData, TestDescriptions, TestResult, TestResponse } from '../../types';
 import { useSessionContext } from '../../context/sessionContext';
+import { useUserActivity } from '../../context/userActivityContext';
 import {
 	startSessionInstance,
 	getPredefinedTestData,
@@ -14,14 +15,15 @@ import {
 	saveCurrentTestRun,
 	getCurrentTestDescriptions,
 	saveTestResponse,
-	saveInstanceSessionAsCompleted
+	saveInstanceSessionAsCompleted,
+	//removeSessionInstance
 } from '../../services/api';
 
 function AfasiaTests() {
 	const { sessionId } = useParams<{ sessionId: string }>();
 	const [sessionInstanceId, setSessionInstanceId] = useState<number | null>(null);
 	const [isTestCompleted, setIsTestCompleted] = useState<boolean>(false);
-	const { session, loading, error, fetchSession } = useSessionContext();
+	const { session, loading, error, fetchSession, setContextSessionInstance } = useSessionContext();
 	const [loadingTest, setLoadingTest] = useState<boolean>(false);
 	const loadTestsRef = useRef(false);
 	const [currentTest, setCurrentTest] = useState<number>(1);
@@ -43,11 +45,24 @@ function AfasiaTests() {
 	const sessionInstanceStartedRef = useRef(false);
 	const initialLoadRef = useRef(false);
 
+	const{
+		activateActivityMonitoring,
+		deactivateActivityMonitoring,
+		showNavigationModal,
+	} = useUserActivity()
+
 	// *********************** UseEffects ***************************************
 
 	const memFetchSession = useCallback((id: number) => {
 		fetchSession(id);
 	}, []);
+
+	useEffect(() => {
+		activateActivityMonitoring();
+		return() => {
+			deactivateActivityMonitoring()
+		}
+	},[activateActivityMonitoring, deactivateActivityMonitoring])
 
 	useEffect(() => {
 		if (initialLoadRef.current) return;
@@ -164,13 +179,13 @@ function AfasiaTests() {
 	}, [currentTest, testWordData.length, sessionInstanceId]);
 
 	useEffect(() => {
-		if (isTestCompleted) return;
+		if (isTestCompleted || showNavigationModal) return;
 		const testInterval = setInterval(() => {
 			setTestTime((prev) => prev + 1);
 		}, 1000);
 
 		return () => clearInterval(testInterval);
-	}, [isTestCompleted]);
+	}, [isTestCompleted, showNavigationModal]);
 
 	useEffect(() => {
 		setTestTime(0);
@@ -223,6 +238,7 @@ function AfasiaTests() {
 				if (sessionInstanceId != null){
 					saveSessionInstanceAsCompleted(sessionInstanceId)
 				}
+				deactivateActivityMonitoring();
 				setIsTestCompleted(true);
 				setShowModal(true);
 			}
@@ -256,6 +272,7 @@ function AfasiaTests() {
 				throw new Error('No se obtuvo el ID de la instancia de sesión');
 			} else {
 				setSessionInstanceId(response.payload as number);
+				setContextSessionInstance(response.payload as number);
 			}
 			console.log('Sesión de pruebas iniciada con ID de instancia:', response.payload);
 		} catch (error) {
@@ -318,6 +335,7 @@ function AfasiaTests() {
 				if (sessionInstanceId != null){
 					saveSessionInstanceAsCompleted(sessionInstanceId)
 				}
+				deactivateActivityMonitoring();
 				setIsTestCompleted(true);
 				setShowModal(true);
 			}
@@ -328,8 +346,10 @@ function AfasiaTests() {
 	};
 
 	const handleCloseModal = () => {
-		setShowModal(false);
-		navigate('/paciente/sesiones-pruebas');
+			deactivateActivityMonitoring();
+			//if(sessionInstanceId !== null) removeSessionInstance(sessionInstanceId);
+			setShowModal(false);
+			navigate('/paciente/sesiones-pruebas');
 	}
 
 	// *********************** HTML ***************************************

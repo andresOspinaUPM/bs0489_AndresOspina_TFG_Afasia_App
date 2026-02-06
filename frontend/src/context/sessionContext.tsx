@@ -14,6 +14,7 @@ export const useSessionContext = () => {
 
 export const SessionProvider = ({children}: {children: ReactNode}) => {
   const [session, setSession] = useState<Session | null>(null);
+  const [sessionInstanceId, setSessionInstanceId] = useState<number | null>(null)
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +41,10 @@ export const SessionProvider = ({children}: {children: ReactNode}) => {
     setLoading(false);
   }
 
+  const setContextSessionInstance = (id: number) => {
+    setSessionInstanceId(id);
+  }
+
   const value: SessionContextType = {
     session,
     loading,
@@ -47,6 +52,8 @@ export const SessionProvider = ({children}: {children: ReactNode}) => {
     setSession,
     fetchSession,
     cleanSession,
+    sessionInstanceId,
+    setContextSessionInstance
   };
 
   return (

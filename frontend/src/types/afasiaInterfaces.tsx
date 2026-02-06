@@ -26,6 +26,8 @@ export interface SessionContextType{
   setSession: (session: Session | null) => void;
   fetchSession: (id: number) => Promise<void>;
   cleanSession: () => void;
+  sessionInstanceId: number | null,
+  setContextSessionInstance: (id: number) => void
 }
 
 export interface PredefinedSessionTest{

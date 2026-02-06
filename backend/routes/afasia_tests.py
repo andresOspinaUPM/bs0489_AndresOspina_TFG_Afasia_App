@@ -360,6 +360,28 @@ async def save_session_instance_as_completed(id_session_instance: int, date: str
             detail=f"Error al guardar la instancia de la sesison como completada: {str(e)}"
         )
 
+async def delete_session_instance(id_session_instance: int):
+    try:
+        with get_db_connection(database) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                DELETE FROM instancia_sesion WHERE id_instancia = ?
+                """
+                ,(id_session_instance,)
+            )
+            conn.commit()
+            if cursor.rowcount == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No existe la intancia de la sesión proporcionada"
+                )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al intentar eliminar la instancia de sesión: {str(e)}"
+        )
+
 # # --------------- ENDPOINTS --------------- #
 
 @router.post('/start-session-instance/{id_sesion}', status_code=status.HTTP_201_CREATED)
@@ -544,4 +566,21 @@ async def save_session_as_completed(id_session_instance: int, current_user: dict
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"BE - Error al marcar como completada la instancia de la sesion {e}"
+        )
+
+@router.delete('/remove-session-instance/{id_session_instance}', status_code=status.HTTP_200_OK)
+async def remove_session_instance(id_session_instance: int, current_user: dict = Depends(get_current_user)):
+    try:
+        await delete_session_instance(id_session_instance)
+        response_data={
+            "success":True,
+            "message":f"Se ha eliminado la intancia de sesión con id: {id_session_instance}"
+        }
+        return response_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"BE - Error al intentar eliminar la instancia de sesion {e}"
         )
