@@ -18,14 +18,14 @@ function NavigationBarPatient() {
       navigate("/inicio");
       window.location.reload();
     }
-    const {handleNavigationAttempt, isActivityMonitoringActive} = useUserActivity();
+    const {handleNavigationAttempt} = useUserActivity();
 
     const navigateTo = (path: string) => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📍 NAVBAR: Click en navegación');
+    console.log('NAVBAR: Click en navegación');
     console.log('   Ruta actual:', location.pathname);
     console.log('   Ruta destino:', path);
-    console.log('   isActivityMonitoringActive:', isActivityMonitoringActive);
+    //console.log('   isActivityMonitoringActive:', isActivityMonitoringActive);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       handleNavigationAttempt(() => navigate(path))
     }

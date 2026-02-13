@@ -58,11 +58,13 @@ function AfasiaTests() {
 	}, []);
 
 	useEffect(() => {
+		console.log('AfasiaTests MONTADO');
 		activateActivityMonitoring();
 		return() => {
+			console.log('AfasiaTests DESMONTADO');
 			deactivateActivityMonitoring()
 		}
-	},[activateActivityMonitoring, deactivateActivityMonitoring])
+	},[])
 
 	useEffect(() => {
 		if (initialLoadRef.current) return;

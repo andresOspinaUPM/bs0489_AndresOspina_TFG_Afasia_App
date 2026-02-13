@@ -27,7 +27,7 @@ const NavigationalModal = () => {
     centered
     >
       <Modal.Header>
-        <Modal.Title>¿Seguro desea abandonar la prueba?</Modal.Title>
+        <Modal.Title>¿Seguro deseas abandonar la prueba?</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <h4>Si abandonas la prueba se perderá todo el progreso</h4>
