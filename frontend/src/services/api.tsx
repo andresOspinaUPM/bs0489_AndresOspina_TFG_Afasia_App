@@ -97,8 +97,7 @@ export type DoctorListResponse = ApiResponse<DoctorList[]>;
 
 export type PatientsListResponse = ApiResponse<PatientsList[]>;
 
-export type CurrentTestRunResponse = ApiResponse<CurrentTestRun>
-
+export type CurrentTestRunResponse = ApiResponse<CurrentTestRun>;
 
 api.interceptors.request.use(
 	(config) => {
@@ -482,5 +481,23 @@ export const removeSessionInstance = async(sessionInstanceId: number): Promise<A
 			throw new Error(error.response.data.detail || "Error al aliminar la instancia de sesion")
 		}
 		throw error
+	}
+}
+
+export const GetAnsweredWords = async(sessionIntanceId: number): Promise<string[]> => {
+	try{
+		const response = await api.get<ApiResponse<string[]>>(`/get-answered-words/${sessionIntanceId}`);
+		if(!response.data.success){
+			throw new Error("Error al obtener las palabras guardadas");
+		}
+		if(!response.data.payload){
+			throw new Error('Error, No hay palabras respondidas');
+		}
+		return response.data.payload;
+	}catch(error){
+		if(axios.isAxiosError(error) && error.response){
+			throw new Error(error.response.data.detail || "Error al obtener las palabras respondidas");
+		}
+		throw Error;
 	}
 }

@@ -78,6 +78,33 @@ async def get_session_instances_records(id_session: int) -> list[dict]:
             detail = f"Error al obtener los registros de las sesiones realizadas: {str(e)}"
         )
 
+async def get_words_answered(id_session: int, id_patient: str) -> list[dict]:
+    try:
+        with get_db_connection(database) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT DISTINCT p.nombre_palabra FROM palabra AS p
+                INNER JOIN registro_ejecucion_prueba AS reg_p ON p.id_palabra = reg_p.id_palabra
+                INNER JOIN respuesta_prueba AS res_p ON reg_p.id_ejecucion_prueba = res_p.id_prueba
+                INNER JOIN instancia_sesion AS ins_s ON reg_p.id_instancia = ins_s.id_instancia
+                WHERE ins_s.id_sesion = ? AND ins_s.id_paciente = ?
+                """
+                ,(id_session, id_patient)
+            )
+            rows = cursor.fetchall()
+            response_data = []
+            for row in rows:
+                response_data.append(row[0])
+            return response_data
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
+        raise HTTPException(
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Error al obtener las palabras respondidas: {str(e)}"
+        )
+
 
 # # --------------- ENDPOINTS --------------- #
 @router.get('/session-instance-completed/{id_session}', status_code=status.HTTP_200_OK)
@@ -109,7 +136,7 @@ async def get_intances_records(id_session: int, current_patient: dict = Depends(
         instances_records = await get_session_instances_records(id_session)
         response_data = {
             "success":True,
-            "message":"Se han obtenido los registrod de las instancias para la sesion",
+            "message":"Se han obtenido los registros de las instancias para la sesion",
             "payload": instances_records
         }
         return response_data
@@ -117,4 +144,20 @@ async def get_intances_records(id_session: int, current_patient: dict = Depends(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener si una instancia de la sesion se ha completado"
+        )
+
+@router.get('/get-answered-words/{id_session}', status_code=status.HTTP_200_OK)
+async def get_answered_words(id_session: int, current_patient: dict = Depends(get_current_user)):
+    try:
+        words_responses = await get_words_answered(id_session, current_patient["dni"])
+        response_data = {
+            "success":True,
+            "message":"Se han obtenido las palabras respondidas exitosamente",
+            "payload":words_responses
+        }
+        return response_data
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener las palabras respondidas - BE: {str(e)}"
         )
