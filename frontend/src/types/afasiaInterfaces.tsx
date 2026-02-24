@@ -71,7 +71,7 @@ export interface InstancesRecords{
   respuesta_correcta: boolean
 }
 
-export interface SessionIntanceRecords{
+export interface SessionInstanceRecords{
   id_instancia: number;
   respuestas: InstancesRecords[]
 }

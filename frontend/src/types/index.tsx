@@ -9,5 +9,5 @@ export type {
     TestResult,
     TestResponse,
     InstancesRecords,
-    SessionIntanceRecords
+    SessionInstanceRecords
 } from './afasiaInterfaces';

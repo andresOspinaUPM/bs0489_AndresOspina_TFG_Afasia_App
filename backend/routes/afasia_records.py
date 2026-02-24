@@ -32,22 +32,38 @@ async def is_session_instance_completed(id_session: int) -> bool:
             detail = f"Error al obtener si se ha completado la instancia de la sesion: {str(e)}"
         )
 
-async def get_session_instances_records(id_session: int) -> list[dict]:
+async def get_session_instances_records(id_session: int, word: str = None) -> list[dict]:
     try:
         with get_db_connection(database) as conn:
             cursor=conn.cursor()
-            cursor.execute(
-                """
-                 SELECT reg.id_instancia, p.nombre_palabra, res.fecha_respuesta, res.tiempo_respuesta, res.respuesta_correcta
-                 FROM respuesta_prueba AS res
-                 INNER JOIN registro_ejecucion_prueba AS reg ON res.id_prueba = reg.id_ejecucion_prueba
-                 INNER JOIN instancia_sesion AS inst_s ON inst_s.id_instancia = reg.id_instancia
-                 LEFT JOIN palabra AS p ON p.id_palabra = reg.id_palabra
-                 WHERE inst_s.id_sesion = ?
-                 ORDER BY reg.id_instancia
-                 """,
-                 (id_session,)
-            )
+            if word is None :
+                cursor.execute(
+                    """
+                    SELECT reg.id_instancia, p.nombre_palabra, res.fecha_respuesta, res.tiempo_respuesta, res.respuesta_correcta
+                    FROM respuesta_prueba AS res
+                    INNER JOIN registro_ejecucion_prueba AS reg ON res.id_prueba = reg.id_ejecucion_prueba
+                    INNER JOIN instancia_sesion AS inst_s ON inst_s.id_instancia = reg.id_instancia
+                    LEFT JOIN palabra AS p ON p.id_palabra = reg.id_palabra
+                    WHERE inst_s.id_sesion = ?
+                    ORDER BY reg.id_instancia
+                    """,
+                    (id_session,)
+                )
+            else:
+                cursor.execute(
+                    """
+                    SELECT reg.id_instancia, p.nombre_palabra, res.fecha_respuesta, res.tiempo_respuesta, res.respuesta_correcta
+                    FROM respuesta_prueba AS res
+                    INNER JOIN registro_ejecucion_prueba AS reg ON res.id_prueba = reg.id_ejecucion_prueba
+                    INNER JOIN instancia_sesion AS inst_s ON inst_s.id_instancia = reg.id_instancia
+                    LEFT JOIN palabra AS p ON p.id_palabra = reg.id_palabra
+                    WHERE inst_s.id_sesion = ?
+                    AND p.nombre_palabra = ?
+                    ORDER BY reg.id_instancia
+                    """,
+                    (id_session, word)
+                )
+
             rows = cursor.fetchall()
             instances_list = []
             current_instance = None
@@ -143,7 +159,7 @@ async def get_intances_records(id_session: int, current_patient: dict = Depends(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener si una instancia de la sesion se ha completado"
+            detail=f"Error al obtener los registros de las instancias de la sesión"
         )
 
 @router.get('/get-answered-words/{id_session}', status_code=status.HTTP_200_OK)
@@ -160,4 +176,20 @@ async def get_answered_words(id_session: int, current_patient: dict = Depends(ge
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener las palabras respondidas - BE: {str(e)}"
+        )
+
+@router.get('/get-records-by-word/{id_session}/{word}', status_code=status.HTTP_200_OK)
+async def get_irecords_by_word(id_session: int, word: str, current_patient: dict = Depends(get_current_user)):
+    try:
+        instances_records = await get_session_instances_records(id_session, word)
+        response_data = {
+            "success":True,
+            "message":"Se han obtenido los registros por palabra",
+            "payload": instances_records
+        }
+        return response_data
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener los registros por palabra"
         )

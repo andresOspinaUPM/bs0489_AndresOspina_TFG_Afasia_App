@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { TestData, TestDescriptions, TestResponse, SessionIntanceRecords } from '../types';
+import { TestData, TestDescriptions, TestResponse, SessionInstanceRecords } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -448,9 +448,9 @@ export const isSessionInstanceCompleted = async(sessionId: number): Promise<ApiR
 	}
 }
 
-export const getInstancesSessionRecords = async(sessionId: number): Promise<SessionIntanceRecords[]> => {
+export const getInstancesSessionRecords = async(sessionId: number): Promise<SessionInstanceRecords[]> => {
 	try{
-		const response = await api.get<ApiResponse<SessionIntanceRecords[]>>(`/afasia-test-records/get-instances-records/${sessionId}`)
+		const response = await api.get<ApiResponse<SessionInstanceRecords[]>>(`/afasia-test-records/get-instances-records/${sessionId}`)
 		if(!response.data.success){
 			throw new Error(response.data.message || "Error al obtener los registros de la sesion")
 		}
@@ -484,9 +484,9 @@ export const removeSessionInstance = async(sessionInstanceId: number): Promise<A
 	}
 }
 
-export const GetAnsweredWords = async(sessionIntanceId: number): Promise<string[]> => {
+export const getAnsweredWords = async(sessionId: number): Promise<string[]> => {
 	try{
-		const response = await api.get<ApiResponse<string[]>>(`/get-answered-words/${sessionIntanceId}`);
+		const response = await api.get<ApiResponse<string[]>>(`/afasia-test-records/get-answered-words/${sessionId}`);
 		if(!response.data.success){
 			throw new Error("Error al obtener las palabras guardadas");
 		}
@@ -498,6 +498,24 @@ export const GetAnsweredWords = async(sessionIntanceId: number): Promise<string[
 		if(axios.isAxiosError(error) && error.response){
 			throw new Error(error.response.data.detail || "Error al obtener las palabras respondidas");
 		}
-		throw Error;
+		throw error;
+	}
+}
+
+export const getRecordsByWord = async(sessionId: number, word: string): Promise<SessionInstanceRecords[]> => {
+	try{
+		const response = await api.get<ApiResponse<SessionInstanceRecords[]>>(`/afasia-test-records/get-records-by-word/${sessionId}/${word}`);
+		if(!response.data.success){
+			throw new Error('Error al obtener losregistros filtrados por palabra');
+		}
+		if(!response.data.payload){
+			throw new Error('No hay datos en el servidor');
+		}
+		return response.data.payload
+	}catch(error){
+		if(axios.isAxiosError(error) && error.response){
+			throw new Error(error.response.data.detail || 'Error al obtener los registros del servidor')
+		}
+		throw error;
 	}
 }
