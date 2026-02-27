@@ -8,6 +8,8 @@ import { useParams } from 'react-router-dom';
 import {isSessionInstanceCompleted, getInstancesSessionRecords, getAnsweredWords, getRecordsByWord} from '../../services/api' 
 import { SessionInstanceRecords } from '../../types';
 
+// type ContentType = 'doctor' | 'patient';
+
 function Records() {
 
 	const isInstanceCompletedChecked = useRef(false);
@@ -17,7 +19,6 @@ function Records() {
 	const [existSessionInstance, setExistSessionInstance] = useState<boolean>(false);
 	const [sessionIntancesRecords, setSessionIntancesRecords] = useState<SessionInstanceRecords[]>([]);
 	const [answeredWords, setAnsweredWords] = useState<string[]>([]);
-	//const showRecordsPerWord = useRef(false);
 	const [showRecordsPerWord, setShowRecordsPerWord] = useState<boolean>(false);
 	const [selectedWord, setSelectedword] = useState<string>('');
 	const [sessionRecordsByWord, setSessionRecordsByWord] = useState<SessionInstanceRecords[]>([]);
@@ -110,6 +111,10 @@ function Records() {
 		}
 	}
 
+	const handleChangeToViewAllRecords = () => {
+		setShowRecordsPerWord(false)
+		setSelectedword('');
+	}
 
 	if(!existSessionInstance){
 		return (
@@ -125,20 +130,10 @@ function Records() {
 	return (
 		<div className={style['main-records-container']}>
 			<div className={style['table-container']}>
-				{!showRecordsPerWord ? (
-					<div>
-						<h1>Registros pruebas</h1>
-						<h3>Por intento</h3>
-					</div>
-					) : (
-						<div >
-							<h1>Registros pruebas</h1>
-							<h3>Por palabra: {selectedWord}</h3>
-						</div>
-					)}
+				<h1>Registros pruebas</h1>
 				<div className={style['table-buttons']}>
-					<Button variant="primary" onClick={() => {setShowRecordsPerWord(false)}} >Ver registros por intento</Button>
-					<DropdownButton id="dropdown-basic-button" title="Filtrar registros por palabra">
+					<Button variant="primary" onClick={() => {handleChangeToViewAllRecords()}} >Ver registros por intento</Button>
+					<DropdownButton id="dropdown-basic-button" title={selectedWord == '' ? 'Filtrar registros por palabra' : `Registros filtrados por: ${selectedWord}`}>
 						{answeredWords.length > 0 ? (
 							answeredWords.map((word, index) => (
 								<Dropdown.Item key={index} onClick={() => {handleSelectedWord(word)}}>{word}</Dropdown.Item>

@@ -155,13 +155,15 @@ function AfasiaTests() {
 				console.log(`datos de la palabra actual ${testData.nombre_palabra}:`, testData);
 				if (!testData) {
 					console.log(`No se ha encontrado la prueba ${currentTest}`);
+					return;
 				}
 				setCurrentTestData(testData);
 				if (testData.id_palabra) {
 					currentTestRunRef.current = await saveCurrentTestRun(sessionInstanceId as number, testData.id_palabra)
 					console.log(`se guarda registro de la ejecucion de la prueba con id: ${currentTestRunRef.current}`)
-					if(!saveCurrentTestRun){
-						console.log(`Error al guardar el registro de la prueba actual`)
+					if(!currentTestRunRef.current){
+						console.log(`Error al guardar el registro de la prueba actual`);
+						return;
 					}
 					console.log(`Se buscaran las decripciones de la palabra con ID: ${testData.id_palabra}`);
 					const descriptions = await getCurrentTestDescriptions(testData.id_palabra);

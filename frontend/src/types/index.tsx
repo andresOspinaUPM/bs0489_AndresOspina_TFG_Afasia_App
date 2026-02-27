@@ -1,4 +1,5 @@
 export type {
+    ProtectedRouteProps,
     PatientData,
     PatientContextType,
     Session,

@@ -1,3 +1,7 @@
+export interface ProtectedRouteProps {
+  allowedRole?: 'doctor' | 'paciente'
+}
+
 export interface PatientData {
 	dni: string;
 	nombre: string;
