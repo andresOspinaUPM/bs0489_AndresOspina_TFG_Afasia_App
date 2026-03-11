@@ -1,3 +1,5 @@
+import {RefObject} from 'react';
+
 export interface ProtectedRouteProps {
   allowedRole?: 'doctor' | 'paciente'
 }
@@ -31,6 +33,7 @@ export interface SessionContextType{
   fetchSession: (id: number) => Promise<void>;
   cleanSession: () => void;
   sessionInstanceId: number | null,
+  sessionInstanceIdRef: RefObject<number | null>;
   setContextSessionInstance: (id: number) => void
 }
 

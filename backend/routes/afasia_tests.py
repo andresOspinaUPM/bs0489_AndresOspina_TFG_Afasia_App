@@ -32,7 +32,7 @@ async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
             if instance_existing:
                 print(f"Ya existe una instancia activa y no se ha completado: {instance_existing[0]}")
                 print(f"sesion: {id_sesion}")
-                return instance_existing[0]
+                await delete_incomplete_instance_session(cursor, instance_existing[0])
 
             cursor.execute(
                 """
@@ -49,6 +49,34 @@ async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al iniciar la instancia de la sesión: {str(e)}"
         )
+
+async def delete_incomplete_instance_session(cursor, instance_id: int) -> None:
+    cursor.execute(
+        """
+        DELETE FROM respuesta_palabra
+        WHERE id_prueba IN (
+            SELECT id_ejecucion_prueba FROM registro_prueba_aleatoria
+            WHERE id_instancia = ?
+        )
+        """,
+        (instance_id,)
+    )
+
+    cursor.execute(
+        """
+        DELETE FROM registro_ejecucion_prueba
+        WHERE id_instancia = ?
+        """,
+        (instance_id,)
+    )
+
+    cursor.execute(
+        """
+        DELETE FROM instancia_sesion
+        WHERE id_instancia = ?
+        """,
+        (instance_id,)
+    )
 
 async def get_predefined_test_data(id_sesion: int) -> List[dict]:
     try:

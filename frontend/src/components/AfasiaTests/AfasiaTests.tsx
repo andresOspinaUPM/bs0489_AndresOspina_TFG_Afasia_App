@@ -16,14 +16,14 @@ import {
 	getCurrentTestDescriptions,
 	saveTestResponse,
 	saveInstanceSessionAsCompleted,
-	//removeSessionInstance
+	removeSessionInstance
 } from '../../services/api';
 
 function AfasiaTests() {
 	const { sessionId } = useParams<{ sessionId: string }>();
 	const [sessionInstanceId, setSessionInstanceId] = useState<number | null>(null);
 	const [isTestCompleted, setIsTestCompleted] = useState<boolean>(false);
-	const { session, loading, error, fetchSession, setContextSessionInstance } = useSessionContext();
+	const { session, loading, error, fetchSession, setContextSessionInstance, sessionInstanceIdRef } = useSessionContext();
 	const [loadingTest, setLoadingTest] = useState<boolean>(false);
 	const loadTestsRef = useRef(false);
 	const [currentTest, setCurrentTest] = useState<number>(1);
@@ -44,6 +44,7 @@ function AfasiaTests() {
 
 	const sessionInstanceStartedRef = useRef(false);
 	const initialLoadRef = useRef(false);
+	const isTestCompletedRef = useRef(false);
 
 	const{
 		activateActivityMonitoring,
@@ -56,6 +57,14 @@ function AfasiaTests() {
 	const memFetchSession = useCallback((id: number) => {
 		fetchSession(id);
 	}, []);
+
+	useEffect(() => {
+		return ()=> {
+			if(!isTestCompletedRef.current && sessionInstanceIdRef.current !== null){
+				removeSessionInstance(sessionInstanceIdRef.current)
+			} 
+		}
+	},[])
 
 	useEffect(() => {
 		console.log('AfasiaTests MONTADO');
@@ -244,6 +253,7 @@ function AfasiaTests() {
 				}
 				deactivateActivityMonitoring();
 				setIsTestCompleted(true);
+				isTestCompletedRef.current = true;
 				setShowModal(true);
 			}
 		}
@@ -341,6 +351,7 @@ function AfasiaTests() {
 				}
 				deactivateActivityMonitoring();
 				setIsTestCompleted(true);
+				isTestCompletedRef.current = true;
 				setShowModal(true);
 			}
 			setUserAnswer('');
@@ -351,7 +362,7 @@ function AfasiaTests() {
 
 	const handleCloseModal = () => {
 			deactivateActivityMonitoring();
-			//if(sessionInstanceId !== null) removeSessionInstance(sessionInstanceId);
+			if(sessionInstanceId !== null) removeSessionInstance(sessionInstanceId);
 			setShowModal(false);
 			navigate('/paciente/sesiones-pruebas');
 	}

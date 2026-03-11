@@ -1,4 +1,4 @@
-import {createContext, useContext, useState, ReactNode} from 'react';
+import {createContext, useContext, useState, useRef, ReactNode} from 'react';
 import { getSessionById } from '../services/api';
 import {Session, SessionContextType} from '../types';
 
@@ -17,6 +17,7 @@ export const SessionProvider = ({children}: {children: ReactNode}) => {
   const [sessionInstanceId, setSessionInstanceId] = useState<number | null>(null)
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const sessionInstanceIdRef = useRef<number | null>(null);
 
   const fetchSession = async (id: number): Promise<void> => {
       try{
@@ -43,7 +44,9 @@ export const SessionProvider = ({children}: {children: ReactNode}) => {
 
   const setContextSessionInstance = (id: number) => {
     setSessionInstanceId(id);
+    sessionInstanceIdRef.current = id;
   }
+
 
   const value: SessionContextType = {
     session,
@@ -53,6 +56,7 @@ export const SessionProvider = ({children}: {children: ReactNode}) => {
     fetchSession,
     cleanSession,
     sessionInstanceId,
+    sessionInstanceIdRef,
     setContextSessionInstance
   };
 
