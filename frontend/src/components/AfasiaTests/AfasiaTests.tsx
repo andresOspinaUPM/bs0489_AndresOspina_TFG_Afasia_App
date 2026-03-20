@@ -21,36 +21,38 @@ import {
 
 function AfasiaTests() {
 	const { sessionId } = useParams<{ sessionId: string }>();
-	const [sessionInstanceId, setSessionInstanceId] = useState<number | null>(null);
-	const [isTestCompleted, setIsTestCompleted] = useState<boolean>(false);
-	const { session, loading, error, fetchSession, setContextSessionInstance, sessionInstanceIdRef } = useSessionContext();
-	const [loadingTest, setLoadingTest] = useState<boolean>(false);
-	const loadTestsRef = useRef(false);
-	const [currentTest, setCurrentTest] = useState<number>(1);
-	const currentTestRef = useRef(0);
-	const currentTestRunRef = useRef(0);
-	const [testWordData, setTestWordData] = useState<TestData[]>([]);
-	const [currentTestData, setCurrentTestData] = useState<TestData | null>(null);
-	const [descriptionData, setDescriptionData] = useState<TestDescriptions | null>(null);
-	const totalOfDescriptions = 6;
-	const [visibleDescriptions, setVisibleDescriptions] = useState<boolean[]>(Array(totalOfDescriptions).fill(false));
-	const [testTime, setTestTime] = useState<number>(0);
-	const [userAnswer, setUserAnswer] = useState<string>('');
-	const [testResults, setTestResults] = useState<TestResult[]>([]);
-	const isTestResponseRef = useRef(false);
-	const testResponseRef = useRef<TestResponse | null>(null)
-	const [showModal, setShowModal] = useState(false);
 	const navigate = useNavigate();
-
-	const sessionInstanceStartedRef = useRef(false);
-	const initialLoadRef = useRef(false);
-	const isTestCompletedRef = useRef(false);
-
+	const totalOfDescriptions = 6;
 	const{
 		activateActivityMonitoring,
 		deactivateActivityMonitoring,
 		showNavigationModal,
 	} = useUserActivity()
+
+// ********** States *********
+	const [sessionInstanceId, setSessionInstanceId] = useState<number | null>(null);
+	const [isTestCompleted, setIsTestCompleted] = useState<boolean>(false);
+	const { session, loading, error, fetchSession, setContextSessionInstance, sessionInstanceIdRef } = useSessionContext();
+	const [loadingTest, setLoadingTest] = useState<boolean>(false);
+	const [currentTest, setCurrentTest] = useState<number>(1);
+	const [testWordData, setTestWordData] = useState<TestData[]>([]);
+	const [currentTestData, setCurrentTestData] = useState<TestData | null>(null);
+	const [descriptionData, setDescriptionData] = useState<TestDescriptions | null>(null);
+	const [visibleDescriptions, setVisibleDescriptions] = useState<boolean[]>(Array(totalOfDescriptions).fill(false));
+	const [testTime, setTestTime] = useState<number>(0);
+	const [userAnswer, setUserAnswer] = useState<string>('');
+	const [testResults, setTestResults] = useState<TestResult[]>([]);
+	const [showModal, setShowModal] = useState(false);
+
+// ********** Refs *********
+	const loadTestsRef = useRef(false);
+	const currentTestRef = useRef(0);
+	const currentTestRunRef = useRef(0);
+	const isTestResponseRef = useRef(false);
+	const testResponseRef = useRef<TestResponse | null>(null)
+	const sessionInstanceStartedRef = useRef(false);
+	const initialLoadRef = useRef(false);
+	const isTestCompletedRef = useRef(false);
 
 	// *********************** UseEffects ***************************************
 
@@ -230,32 +232,47 @@ function AfasiaTests() {
 		if (!currentTestData || !session) return;
 		const timeLimit = session.tiempo_limite_por_prueba;
 		if (testTime >= timeLimit && !isTestCompleted && !isTestResponseRef.current) {
-			isTestResponseRef.current = true;
-			setTestResults((prevResults) => [
-				...prevResults,
-				{
-					palabraObjetivo: currentTestData?.nombre_palabra.trim().toLowerCase() || '',
-					resultado: 'fallado',
-					tiempo: testTime,
-				},
-			]);
-			testResponseRef.current = {
-				id_prueba: currentTestRunRef.current,
-				tiempo_respuesta: testTime,
-				respuesta_correcta: false
-			};
-			saveResponse(testResponseRef.current)
-			if (session?.cantidad_pruebas && currentTestRef.current < session?.cantidad_pruebas) {
-				setCurrentTest((prevCurrentTest) => prevCurrentTest + 1);
-			} else {
-				if (sessionInstanceId != null){
-					saveSessionInstanceAsCompleted(sessionInstanceId)
+			const handleTimeout = async() =>{
+				try {
+					isTestResponseRef.current = true;
+					setTestResults((prevResults) => [
+						...prevResults,
+						{
+							palabraObjetivo: currentTestData?.nombre_palabra.trim().toLowerCase() || '',
+							resultado: 'fallado',
+							tiempo: testTime,
+						},
+					]);
+					testResponseRef.current = {
+						id_prueba: currentTestRunRef.current,
+						tiempo_respuesta: testTime,
+						respuesta_correcta: false
+					};
+					await saveResponse(testResponseRef.current)
+					if (session?.cantidad_pruebas && currentTestRef.current < session?.cantidad_pruebas) {
+						setCurrentTest((prevCurrentTest) => prevCurrentTest + 1);
+					} else {
+						if (sessionInstanceId != null){
+							await saveSessionInstanceAsCompleted(sessionInstanceId)
+						}
+						deactivateActivityMonitoring();
+						setIsTestCompleted(true);
+						isTestCompletedRef.current = true;
+						setShowModal(true);
+					}
+				}catch(error){
+					console.log(`Error en el timeout de la prueba ${error}`)
+					if (session?.cantidad_pruebas && currentTestRef.current < session.cantidad_pruebas) {
+            setCurrentTest(prev => prev + 1);
+					} else {
+							deactivateActivityMonitoring();
+							setIsTestCompleted(true);
+							isTestCompletedRef.current = true;
+							setShowModal(true);
+					}
 				}
-				deactivateActivityMonitoring();
-				setIsTestCompleted(true);
-				isTestCompletedRef.current = true;
-				setShowModal(true);
 			}
+			handleTimeout();
 		}
 	}, [testTime, isTestCompleted, session]);
 
@@ -316,7 +333,8 @@ function AfasiaTests() {
 				throw new Error ('Error al guardas la sesion como completada')
 			}
 		}catch(error){
-			console.log('Error al marcar la instancia de la session como completada', error)
+			console.log('Error al marcar la instancia de la session como completada', error);
+			throw error;
 		}
 	}
 
@@ -324,7 +342,7 @@ function AfasiaTests() {
 		setUserAnswer(e.target.value);
 	};
 
-	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!currentTestData || !session) {
 			return;
@@ -342,17 +360,23 @@ function AfasiaTests() {
 				tiempo_respuesta: testTime,
 				respuesta_correcta: true
 			};
-			saveResponse(testResponseRef.current)
+			await saveResponse(testResponseRef.current)
 			if (session?.cantidad_pruebas && currentTest < session?.cantidad_pruebas) {
 				setCurrentTest((prevCurrentTest) => prevCurrentTest + 1);
 			} else {
 				if (sessionInstanceId != null){
-					saveSessionInstanceAsCompleted(sessionInstanceId)
+					try{
+
+						await saveSessionInstanceAsCompleted(sessionInstanceId)
+						deactivateActivityMonitoring();
+						setIsTestCompleted(true);
+						isTestCompletedRef.current = true;
+						setShowModal(true);
+					}catch(error){
+						console.log('No se pudo marcar la sesion como completada: ', error);
+						alert('Error al guardar los datos')
+					}
 				}
-				deactivateActivityMonitoring();
-				setIsTestCompleted(true);
-				isTestCompletedRef.current = true;
-				setShowModal(true);
 			}
 			setUserAnswer('');
 		} else {
@@ -362,7 +386,7 @@ function AfasiaTests() {
 
 	const handleCloseModal = () => {
 			deactivateActivityMonitoring();
-			if(sessionInstanceId !== null) removeSessionInstance(sessionInstanceId);
+			//if(sessionInstanceId !== null) removeSessionInstance(sessionInstanceId);
 			setShowModal(false);
 			navigate('/paciente/sesiones-pruebas');
 	}

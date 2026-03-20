@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import {useState, useEffect} from 'react'
-import {getSessionsListPerPatient, PatientSessions} from '../../services/api';
+import {getSessionsListPerPatient} from '../../services/api';
+import { PatientSessions } from "../../types";
 import { useSessionContext } from "../../context/sessionContext";
 import { useDoctorPatientContext } from "../../context/doctorPatientContext";
 import { Session } from "../../types";
@@ -11,9 +12,6 @@ type ContentType = 'pruebas' | 'registrosPaciente' | 'registrosDoctor'
 
 function PatientSessionsList({type}: {type:ContentType, doctor?:boolean}) {
 
-  
-
-	
   const [patientSessions, setPatientSessions] = useState<PatientSessions[]>([]);
   
   const {setSession} = useSessionContext();

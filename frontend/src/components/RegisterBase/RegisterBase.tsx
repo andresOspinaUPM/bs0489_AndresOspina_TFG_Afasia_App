@@ -1,16 +1,17 @@
 import Form from "react-bootstrap/Form";
+import { RegisterBaseProps } from "../../types";
 
-interface RegisterBaseProps {
-  formData: {
-    dni: string;
-    nombre: string;
-    apellidos: string;
-    centro_medico: string;
-    email: string;
-    contrasena: string;
-  };
-  onChange: (name: string, value: string) => void;
-}
+// interface RegisterBaseProps {
+//   formData: {
+//     dni: string;
+//     nombre: string;
+//     apellidos: string;
+//     centro_medico: string;
+//     email: string;
+//     contrasena: string;
+//   };
+//   onChange: (name: string, value: string) => void;
+// }
 
 function RegisterBase({formData, onChange}: RegisterBaseProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,15 +1,16 @@
 import {createContext, useContext, useState, useEffect, ReactNode, useRef} from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserActivityContextType } from '../types';
 
-interface UserActivityContextType {
-  //isActivityMonitoringActiveRef: boolean;
-  showNavigationModal: boolean;
-  activateActivityMonitoring: () => void;
-  deactivateActivityMonitoring: () => void;
-  handleNavigationAttempt: (navigation: () => void) => void;
-  confirmNavigation: () => void;
-  cancelNavigation: () => void;
-}
+// interface UserActivityContextType {
+//   //isActivityMonitoringActiveRef: boolean;
+//   showNavigationModal: boolean;
+//   activateActivityMonitoring: () => void;
+//   deactivateActivityMonitoring: () => void;
+//   handleNavigationAttempt: (navigation: () => void) => void;
+//   confirmNavigation: () => void;
+//   cancelNavigation: () => void;
+// }
 
 const UserActivityContext = createContext<UserActivityContextType | null>(null);
 

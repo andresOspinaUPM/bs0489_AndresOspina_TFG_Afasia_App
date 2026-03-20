@@ -1,6 +1,18 @@
 export type {
     ProtectedRouteProps,
+    RegisterBaseProps,
+	RegisterPatient,
+	MedicoRegistro,
+	ApiResponse,
+	LoginData,
+	LoginResponse,
+	UserResponse,
+	DoctorList,
     PatientData,
+	PatientsList,
+	AfasiaTestConfig,
+	PatientSessions,
+	//CurrentTestRun,
     PatientContextType,
     Session,
     SessionContextType,
@@ -10,5 +22,6 @@ export type {
     TestResult,
     TestResponse,
     InstancesRecords,
-    SessionInstanceRecords
+    SessionInstanceRecords,
+    UserActivityContextType
 } from './afasiaInterfaces';

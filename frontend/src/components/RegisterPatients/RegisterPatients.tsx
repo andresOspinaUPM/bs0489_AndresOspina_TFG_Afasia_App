@@ -5,7 +5,8 @@ import Alert from "react-bootstrap/Alert";
 import style from "./RegisterPatients.module.css";
 import { Link } from "react-router-dom";
 import RegisterBase from "../RegisterBase/RegisterBase";
-import {registerPatient, getDoctorList, DoctorList} from "../../services/api";
+import {registerPatient, getDoctorList} from "../../services/api";
+import { DoctorList } from "../../types";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 
 function RegisterPatient() {

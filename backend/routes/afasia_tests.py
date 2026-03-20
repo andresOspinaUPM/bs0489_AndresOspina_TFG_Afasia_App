@@ -53,9 +53,9 @@ async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
 async def delete_incomplete_instance_session(cursor, instance_id: int) -> None:
     cursor.execute(
         """
-        DELETE FROM respuesta_palabra
+        DELETE FROM respuesta_prueba
         WHERE id_prueba IN (
-            SELECT id_ejecucion_prueba FROM registro_prueba_aleatoria
+            SELECT id_ejecucion_prueba FROM registro_ejecucion_prueba
             WHERE id_instancia = ?
         )
         """,
@@ -394,16 +394,27 @@ async def delete_session_instance(id_session_instance: int):
             cursor = conn.cursor()
             cursor.execute(
                 """
-                DELETE FROM instancia_sesion WHERE id_instancia = ?
+                SELECT 1 FROM instancia_sesion 
+                WHERE id_instancia = ?
+                AND completada = 0
                 """
                 ,(id_session_instance,)
             )
+            instance = cursor.fetchone()
+
+            if not instance:
+                return
+            
+            cursor.execute(
+                """
+                DELETE FROM instancia_sesion WHERE id_instancia = ?
+                """,
+                (id_session_instance,)
+            )
+
             conn.commit()
-            if cursor.rowcount == 0:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="No existe la intancia de la sesión proporcionada"
-                )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -1,5 +1,21 @@
 import axios from 'axios';
-import { TestData, TestDescriptions, TestResponse, SessionInstanceRecords } from '../types';
+import { TestData,
+	TestDescriptions,
+	TestResponse,
+	SessionInstanceRecords,
+	RegisterPatient,
+	MedicoRegistro,
+	ApiResponse,
+	LoginData,
+	LoginResponse,
+	UserResponse,
+	DoctorList,
+	PatientsList,
+	AfasiaTestConfig,
+	PatientSessions,
+	//CurrentTestRun
+
+} from '../types';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -10,94 +26,92 @@ export const api = axios.create({
 	},
 });
 
-export interface DefaultUser {
-	dni: string;
-	nombre: string;
-	apellidos: string;
-	centro_medico: string;
-	email: string;
-	contrasena: string;
-}
+// export interface DefaultUser {
+// 	dni: string;
+// 	nombre: string;
+// 	apellidos: string;
+// 	centro_medico: string;
+// 	email: string;
+// 	contrasena: string;
+// }
 
-export interface RegisterPatient extends DefaultUser {
-	sexo: string;
-	fecha_nacimiento: string;
-}
+// export interface RegisterPatient extends DefaultUser {
+// 	sexo: string;
+// 	fecha_nacimiento: string;
+// }
 
-export interface MedicoRegistro extends DefaultUser {}
+// export interface MedicoRegistro extends DefaultUser {}
 
-export interface ApiResponse<responseData = unknown> {
-	success: boolean;
-	message: string;
-	payload?: responseData;
-}
+// export interface ApiResponse<responseData = unknown> {
+// 	success: boolean;
+// 	message: string;
+// 	payload?: responseData;
+// }
 
-export interface LoginData {
-	email: string;
-	password: string;
-}
+// export interface LoginData {
+// 	email: string;
+// 	password: string;
+// }
 
-export interface LoginResponse {
-	success: boolean;
-	message: string;
-	access_token: string;
-	token_type: string;
-	user_rol: string;
-	name: string;
-}
+// export interface LoginResponse {
+// 	success: boolean;
+// 	message: string;
+// 	access_token: string;
+// 	token_type: string;
+// 	user_rol: string;
+// 	name: string;
+// }
 
-export interface UserResponse {
-	dni: string;
-	nombre: string;
-	apellidos: string;
-	email: string;
-	centro_medico: string;
-}
+// export interface UserResponse {
+// 	dni: string;
+// 	nombre: string;
+// 	apellidos: string;
+// 	email: string;
+// 	centro_medico: string;
+// }
 
-export interface DoctorList {
-	dni: string;
-	nombre: string;
-	apellidos: string;
-}
+// export interface DoctorList {
+// 	dni: string;
+// 	nombre: string;
+// 	apellidos: string;
+// }
 
-//esta interfaz se ha puesto en afasiaInterfaces
-//ToDo: ver en donde se ha utilizado a parte de este api y modificar (refactorizar)
-export interface PatientsList { 
-	dni: string;
-	nombre: string;
-	apellidos: string;
-}
+// export interface PatientsList { 
+// 	dni: string;
+// 	nombre: string;
+// 	apellidos: string;
+// }
 
-export interface AfasiaTestConfig {
-	dni_paciente: string;
-	nivel: string;
-	cantidad_pruebas: number;
-	tiempo_limite_por_prueba: number;
-	imagenes_aleatorias: boolean;
-}
+// export interface AfasiaTestConfig {
+// 	dni_paciente: string;
+// 	nivel: string;
+// 	cantidad_pruebas: number;
+// 	tiempo_limite_por_prueba: number;
+// 	imagenes_aleatorias: boolean;
+// }
 
-export interface PatientSessions {
-	id_sesion: number;
-	nombre_sesion: string;
-	nivel: 'Facil' | 'Medio' | 'Dificil';
-	cantidad_pruebas: number;
-	tiempo_limite_por_prueba: number;
-	imagenes_aleatorias: boolean;
-}
+// export interface PatientSessions {
+// 	id_sesion: number;
+// 	nombre_sesion: string;
+// 	nivel: 'Facil' | 'Medio' | 'Dificil';
+// 	cantidad_pruebas: number;
+// 	tiempo_limite_por_prueba: number;
+// 	imagenes_aleatorias: boolean;
+// }
 
-export interface CurrentTestRun{
-	id_ejecucion_prueba: number;
-}
+// export interface CurrentTestRun{
+// 	id_ejecucion_prueba: number;
+// }
 
-export type SessionsListResponse = ApiResponse<PatientSessions[]>;
+//export type SessionsListResponse = ApiResponse<PatientSessions[]>;
 
 export type UserResponseData = ApiResponse<UserResponse>;
 
-export type DoctorListResponse = ApiResponse<DoctorList[]>;
+//export type DoctorListResponse = ApiResponse<DoctorList[]>;
 
 export type PatientsListResponse = ApiResponse<PatientsList[]>;
 
-export type CurrentTestRunResponse = ApiResponse<CurrentTestRun>;
+//export type CurrentTestRunResponse = ApiResponse<CurrentTestRun>;
 
 api.interceptors.request.use(
 	(config) => {
@@ -201,7 +215,8 @@ export const getToken = (): string | null => {
 
 export const getDoctorList = async (): Promise<DoctorList[]> => {
 	try {
-		const response = await api.get<DoctorListResponse>('/doctor/list');
+		//const response = await api.get<DoctorListResponse>('/doctor/list');
+		const response = await api.get<ApiResponse<DoctorList[]>>('/doctor/list');
 		if (!response.data.success) {
 			throw new Error(response.data.message || 'Error al obtener la lista de doctores');
 		}
@@ -221,7 +236,8 @@ export const getPatientsListPerDoctor = async (): Promise<PatientsList[]> => {
 		if (!token) {
 			throw new Error('Usuario no autenticado');
 		}
-		const response = await api.get<PatientsListResponse>(`/doctor/listOfPatients`);
+		//const response = await api.get<PatientsListResponse>(`/doctor/listOfPatients`);
+		const response = await api.get<ApiResponse<PatientsList[]>>(`/doctor/listOfPatients`);
 		if (!response.data.success) {
 			throw new Error(response.data.message || 'Error al obtener la lista de pacientes');
 		}
@@ -271,7 +287,8 @@ export const configureAfasiaSessions = async (configData: AfasiaTestConfig): Pro
 export const getSessionsListPerPatient = async (dniPaciente ?:string): Promise<PatientSessions[]> => {
 	try {
 		const requestBody = dniPaciente ? { patient_dni: dniPaciente } : {};
-		const response = await api.post<SessionsListResponse>('/afasia-tests-sessions/patient-sessions-list', requestBody);
+		// const response = await api.post<SessionsListResponse>('/afasia-tests-sessions/patient-sessions-list', requestBody);
+		const response = await api.post<ApiResponse<PatientSessions[]>>('/afasia-tests-sessions/patient-sessions-list', requestBody);
 		if (!response.data.success) {
 			throw new Error(response.data.message || 'Error al obtener la lista de sesiones del paciente');
 		}

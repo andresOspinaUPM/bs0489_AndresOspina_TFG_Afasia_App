@@ -4,11 +4,100 @@ export interface ProtectedRouteProps {
   allowedRole?: 'doctor' | 'paciente'
 }
 
+export interface RegisterBaseProps {
+  formData: {
+    dni: string;
+    nombre: string;
+    apellidos: string;
+    centro_medico: string;
+    email: string;
+    contrasena: string;
+  };
+  onChange: (name: string, value: string) => void;
+}
+
+interface DefaultUser {
+  dni: string;
+  nombre: string;
+  apellidos: string;
+  centro_medico: string;
+  email: string;
+  contrasena: string;
+}
+
+export interface RegisterPatient extends DefaultUser {
+  sexo: string;
+  fecha_nacimiento: string;
+}
+
+export interface MedicoRegistro extends DefaultUser {}
+
+export interface ApiResponse<responseData = unknown> {
+  success: boolean;
+  message: string;
+  payload?: responseData;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  access_token: string;
+  token_type: string;
+  user_rol: string;
+  name: string;
+}
+
+export interface UserResponse {
+  dni: string;
+  nombre: string;
+  apellidos: string;
+  email: string;
+  centro_medico: string;
+}
+
+export interface DoctorList {
+  dni: string;
+  nombre: string;
+  apellidos: string;
+}
+
 export interface PatientData {
 	dni: string;
 	nombre: string;
 	apellidos: string;
 }
+
+export interface PatientsList { 
+  dni: string;
+  nombre: string;
+  apellidos: string;
+}
+
+export interface AfasiaTestConfig {
+  dni_paciente: string;
+  nivel: string;
+  cantidad_pruebas: number;
+  tiempo_limite_por_prueba: number;
+  imagenes_aleatorias: boolean;
+}
+
+export interface PatientSessions {
+  id_sesion: number;
+  nombre_sesion: string;
+  nivel: 'Facil' | 'Medio' | 'Dificil';
+  cantidad_pruebas: number;
+  tiempo_limite_por_prueba: number;
+  imagenes_aleatorias: boolean;
+}
+
+// export interface CurrentTestRun{
+//   id_ejecucion_prueba: number;
+// }
 
 export interface PatientContextType{
   selectedPatient: PatientData | null;
@@ -81,4 +170,14 @@ export interface InstancesRecords{
 export interface SessionInstanceRecords{
   id_instancia: number;
   respuestas: InstancesRecords[]
+}
+
+export interface UserActivityContextType {
+  //isActivityMonitoringActiveRef: boolean;
+  showNavigationModal: boolean;
+  activateActivityMonitoring: () => void;
+  deactivateActivityMonitoring: () => void;
+  handleNavigationAttempt: (navigation: () => void) => void;
+  confirmNavigation: () => void;
+  cancelNavigation: () => void;
 }

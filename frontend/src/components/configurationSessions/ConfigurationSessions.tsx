@@ -3,7 +3,8 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Alert from "react-bootstrap/Alert";
 import style from './ConfigurationSessions.module.css';
-import { getPatientsListPerDoctor, getTotalOfWords, PatientsList, configureAfasiaSessions } from "../../services/api";
+import { getPatientsListPerDoctor, getTotalOfWords, configureAfasiaSessions } from "../../services/api";
+import { PatientsList } from "../../types";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 
 function ConfigurationSessions() {
