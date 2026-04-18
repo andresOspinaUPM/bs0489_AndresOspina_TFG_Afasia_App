@@ -12,7 +12,6 @@ export type {
 	PatientsList,
 	AfasiaTestConfig,
 	PatientSessions,
-	//CurrentTestRun,
     PatientContextType,
     Session,
     SessionContextType,

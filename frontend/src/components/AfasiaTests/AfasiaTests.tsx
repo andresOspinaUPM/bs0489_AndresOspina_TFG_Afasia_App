@@ -479,32 +479,34 @@ function AfasiaTests() {
 					</div>
 
 					<div className={`${style['surrounding-card']} ${style['category-card']}`}>
-						<h4>Categoria</h4>
+						<h4>Categoria - ¿Es un tipo de...?
+						</h4>
 						{visibleDescriptions[0] && <p>{descriptionData?.categoria}</p>}
 					</div>
 
 					<div className={`${style['surrounding-card']} ${style['use-card']}`}>
-						<h4>Uso</h4>
+						<h4>Uso - ¿Cómo se usa?
+						</h4>
 						{visibleDescriptions[1] && <p>{descriptionData?.uso}</p>}
 					</div>
 
 					<div className={`${style['surrounding-card']} ${style['properties-card']}`}>
-						<h4>Propiedades</h4>
+						<h4>Propiedades - ¿Cómo es?</h4>
 						{visibleDescriptions[2] && <p>{descriptionData?.propiedades}</p>}
 					</div>
 
 					<div className={`${style['surrounding-card']} ${style['association-card']}`}>
-						<h4>Asociación</h4>
+						<h4>Asociación - ¿Con qué lo puedo asociar?</h4>
 						{visibleDescriptions[3] && <p>{descriptionData?.asociacion}</p>}
 					</div>
 
 					<div className={`${style['surrounding-card']} ${style['localization-card']}`}>
-						<h4>Localización</h4>
+						<h4>Localización - ¿Dónde se encuentra?</h4>
 						{visibleDescriptions[4] && <p>{descriptionData?.localizacion}</p>}
 					</div>
 
 					<div className={`${style['surrounding-card']} ${style['action-card']}`}>
-						<h4>Acción</h4>
+						<h4>Acción - ¿Qué hace?</h4>
 						{visibleDescriptions[5] && <p>{descriptionData?.accion}</p>}
 					</div>
 				</div>
