@@ -12,7 +12,7 @@ function NavegationBar() {
     <Navbar collapseOnSelect expand="lg" className={style["body"]}>
       <Container>
         <Navbar.Brand className="text-white" href="#home">
-          Tratamiento Afasia
+          Tratamiento Afasia SFA
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" className={style["toggle"]} />
         <Navbar.Collapse id="responsive-navbar-nav">
@@ -34,10 +34,10 @@ function NavegationBar() {
                 menuVariant="dark"
               >
                 <NavDropdown.Item as={Link} to="/registrarDoctor" className="text-white">
-                  Registro Doctor
+                  Registro de Médico
                 </NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/registrarPaciente" className="text-white">
-                  Registro Paciente
+                  Registro de Paciente
                 </NavDropdown.Item>
               </NavDropdown>
             </div>

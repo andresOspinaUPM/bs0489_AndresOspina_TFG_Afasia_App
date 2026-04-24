@@ -386,7 +386,6 @@ function AfasiaTests() {
 
 	const handleCloseModal = () => {
 			deactivateActivityMonitoring();
-			//if(sessionInstanceId !== null) removeSessionInstance(sessionInstanceId);
 			setShowModal(false);
 			navigate('/paciente/sesiones-pruebas');
 	}

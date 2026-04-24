@@ -8,6 +8,7 @@ import RegisterBase from "../RegisterBase/RegisterBase";
 import {registerPatient, getDoctorList} from "../../services/api";
 import { DoctorList } from "../../types";
 import { DropdownButton, Dropdown } from "react-bootstrap";
+import { validateCommonFields } from "../../utils/validators";
 
 function RegisterPatient() {
   const[formData, setFormData] = useState({
@@ -22,8 +23,8 @@ function RegisterPatient() {
     sexo: "",
   });
 
-  const [message, setMessage]= useState('');
-  const [error, setError] = useState('');
+  const [message, setMessage]= useState('');  
+  const [registerErrors, setRegisterErrors] = useState<Record<string, string>>({});
   const[loading, setLoading] = useState(false);
   const [doctorList, setDoctorList] = useState<DoctorList[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
@@ -52,7 +53,7 @@ function RegisterPatient() {
     }
   }
 
-   const cleanData = (data: typeof formData)=>{
+  const cleanData = (data: typeof formData)=>{
     return{
       dni: data.dni.trim().toUpperCase(),
       nombre: data.nombre.replace(/\s+/g, ' ').trim(),
@@ -67,48 +68,20 @@ function RegisterPatient() {
   }
 
   const validateData = (data: ReturnType<typeof cleanData>) =>{
-    const errors: string[] = [];
-    if(!data.dni.trim()){
-      errors.push('El DNI es obligatorio');
-    }else if(data.dni.trim().length !== 9 || !validateDNI(data.dni.trim())){
-      errors.push('El DNI no es válido.');
-    }
-    if(data.nombre.length < 2){
-      errors.push('El nombre debe tener al menos 2 caracteres.');
-    }
-    if(data.apellidos.length < 2){
-      errors.push('El apellido debe tener al menos 2 caracteres.');
-    }
-    if(data.centro_medico.length < 2){
-      errors.push('El centro médico debe tener al menos 2 caracteres.');
-    }
-    if(!data.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)){
-      errors.push('El email no es válido.');
-    }
-    if(data.contrasena.length < 6){
-      errors.push('La contraseña debe tener al menos 6 caracteres.');
-    }
+    
+    const errors = validateCommonFields(data);
+
     if(!data.fecha_nacimiento){
-      errors.push('La fecha de nacimiento es obligatoria.');
+      errors.fecha_nacimiento = 'La fecha de nacimiento es obligatoria.';
     }
+
     if(!data.dni_medico){
-      errors.push('El médico es obligatorio.');
+      errors.dni_medico = 'El médico es obligatorio.';
     }
     if(!data.sexo){
-      errors.push('El sexo es obligatorio.');
+      errors.sexo = 'El sexo es obligatorio.';
     }
     return errors;
-  }
-
-  const validateDNI = (dni: string) =>{
-    if(!dni.match(/^[0-9]{8}[A-Za-z]$/)){
-      return false;
-    }
-    const numero = dni.substring(0, 8);
-    const letra = dni.substring(8, 9).toUpperCase();
-    const letras = 'TRWAGMYFPDXBNJZSQVHLCKE';
-    const letraCorrecta = letras.charAt(parseInt(numero, 10) % 23);
-    return letra === letraCorrecta;
   }
 
   const preparePatientData = (processedData: ReturnType<typeof cleanData>) => {
@@ -130,7 +103,9 @@ function RegisterPatient() {
       ...prev,
       [name]: value
     }));
-    if(error) setError('');
+    if(registerErrors[name]){
+      setRegisterErrors(prev => ({...prev, [name]: ''}))
+    }
   };
 
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,7 +114,9 @@ function RegisterPatient() {
       ...prev,
       [name]: value
     }));
-    if(error) setError('');
+    if(registerErrors[name]){
+      setRegisterErrors(prev => ({...prev, [name]: ''}))
+    }
 };
 
 const handleDoctorSelect = (doctorName: DoctorList) => {
@@ -148,22 +125,24 @@ const handleDoctorSelect = (doctorName: DoctorList) => {
       dni_medico: doctorName.dni
     }));
     setSelectedDoctorName(`${doctorName.nombre} ${doctorName.apellidos}`);
-    if(error) setError('');
+    if(registerErrors.dni_medico){
+      setRegisterErrors(prev => ({...prev, dni_medico: ''}))
+    }
 }
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     setMessage('');
-    setError('');
     setLoading(true);
 
     try {
 
       const cleanedData = cleanData(formData);
       const validationErrors = validateData(cleanedData);
-      if(validationErrors.length > 0){
-        throw new Error(validationErrors.join(' '));
+      if(Object.keys(validationErrors).length > 0){
+        setRegisterErrors(validationErrors);
+        setLoading(false);
+        return;
       }
 
       const patientData = preparePatientData(cleanedData);
@@ -187,9 +166,9 @@ const handleDoctorSelect = (doctorName: DoctorList) => {
 
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        setRegisterErrors({ general: err.message });
       } else {
-        setError('Error al registrar paciente');
+        setRegisterErrors({ general: 'Error al registrar paciente'});
       }
     } finally {
       setLoading(false);
@@ -202,23 +181,27 @@ const handleDoctorSelect = (doctorName: DoctorList) => {
         <h1>Registro de Paciente</h1>
 
         {message && <Alert variant="success">{message}</Alert>}
-        {error && <Alert variant="danger">{error}</Alert>}
+        {registerErrors.general && <Alert variant="danger">{registerErrors.general}</Alert>}
 
-        <Form className={style["form"]} onSubmit={handleSubmit}>
+        <Form noValidate className={style["form"]} onSubmit={handleSubmit}>
           <RegisterBase 
             formData={formData}
             onChange={handleInputChange}
+            registerErrors={registerErrors}
           />
           <Form.Group className="mb-3">
             <Form.Label>Fecha de Nacimiento</Form.Label>
             <Form.Control 
-              required 
               type="date" 
               name="fecha_nacimiento"
               value={formData.fecha_nacimiento}
               onChange={handleRadioChange}
-              placeholder="Ingresar Fecha de Nacimiento" 
+              placeholder="Ingresar Fecha de Nacimiento"
+              isInvalid={!!registerErrors.fecha_nacimiento}
             />
+            <Form.Control.Feedback type="invalid">
+              {registerErrors.fecha_nacimiento}
+            </Form.Control.Feedback>
           </Form.Group>
             <Form.Label>Medico Responsable</Form.Label>
             <DropdownButton 
@@ -248,6 +231,9 @@ const handleDoctorSelect = (doctorName: DoctorList) => {
               disabled>No hay médicos disponibles</Dropdown.Item>
             )} 
             </DropdownButton>
+            {registerErrors.dni_medico && (
+              <div className="text-danger">{registerErrors.dni_medico}</div>
+            )}
           <Form.Group>
 
           </Form.Group>
@@ -286,6 +272,9 @@ const handleDoctorSelect = (doctorName: DoctorList) => {
                 onChange={handleRadioChange}
               />
             </div>
+            {registerErrors.sexo && (
+              <div className="text-danger">{registerErrors.sexo}</div>
+            )}
           </Form.Group>
 
           <Button 

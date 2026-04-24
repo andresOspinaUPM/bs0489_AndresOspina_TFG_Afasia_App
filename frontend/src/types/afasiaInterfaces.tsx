@@ -14,15 +14,16 @@ export interface RegisterBaseProps {
     contrasena: string;
   };
   onChange: (name: string, value: string) => void;
+  registerErrors?: Record<string, string>;
 }
 
-interface DefaultUser {
-  dni: string;
-  nombre: string;
-  apellidos: string;
-  centro_medico: string;
-  email: string;
-  contrasena: string;
+export interface DefaultUser {
+  dni?: string;
+  nombre?: string;
+  apellidos?: string;
+  centro_medico?: string;
+  email?: string;
+  contrasena?: string;
 }
 
 export interface RegisterPatient extends DefaultUser {
