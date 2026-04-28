@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import style from './Login.module.css';
@@ -122,10 +122,6 @@ function Login() {
 					<Button className={style['form-button']} variant="primary" type="submit" disabled={loading}>
 						{loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
 					</Button>
-					<p className={style['form-redirection-text']}>
-						¿No tienes cuenta?&nbsp;
-						<Link to="/registrar">Registrate</Link>
-					</p>
 				</Form>
 			</div>
 		</section>

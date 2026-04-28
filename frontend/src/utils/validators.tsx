@@ -11,6 +11,32 @@ const validateDNI = (dni: string): boolean => {
     return letra === letraCorrecta;
 }
 
+export const validateDate = (date: string): string => {
+  if(!date){
+    return 'La fecha de nacimiento es obligatoria.';
+  }
+  
+  const dateOfBirth = new Date(date);
+  const today = new Date();
+  const age = today.getFullYear() - dateOfBirth.getFullYear();
+  
+
+  if(isNaN(dateOfBirth.getTime())){
+    return 'La fecha de nacimiento no es válida.';
+  }
+
+  if(dateOfBirth > today){
+    return 'La fecha de nacimiento no puede ser una fecha futura';
+  }
+
+  if(age <= 0 || age > 120){
+    return 'La fecha de nacimiento no es válida';
+  }
+
+  return '';
+
+}
+
 export const validateCommonFields = (data: DefaultUser): Record<string, string> => {
   const errors: Record<string, string> = {};
 

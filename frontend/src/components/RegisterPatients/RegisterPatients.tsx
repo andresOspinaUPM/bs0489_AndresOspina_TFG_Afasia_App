@@ -8,7 +8,7 @@ import RegisterBase from "../RegisterBase/RegisterBase";
 import {registerPatient, getDoctorList} from "../../services/api";
 import { DoctorList } from "../../types";
 import { DropdownButton, Dropdown } from "react-bootstrap";
-import { validateCommonFields } from "../../utils/validators";
+import { validateCommonFields, validateDate } from "../../utils/validators";
 
 function RegisterPatient() {
   const[formData, setFormData] = useState({
@@ -70,9 +70,10 @@ function RegisterPatient() {
   const validateData = (data: ReturnType<typeof cleanData>) =>{
     
     const errors = validateCommonFields(data);
+    const dateErrors = validateDate(data.fecha_nacimiento);
 
-    if(!data.fecha_nacimiento){
-      errors.fecha_nacimiento = 'La fecha de nacimiento es obligatoria.';
+    if(dateErrors){
+      errors.fecha_nacimiento = dateErrors;
     }
 
     if(!data.dni_medico){
