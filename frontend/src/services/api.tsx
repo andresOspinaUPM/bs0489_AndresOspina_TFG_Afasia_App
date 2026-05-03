@@ -13,8 +13,6 @@ import { TestData,
 	PatientsList,
 	AfasiaTestConfig,
 	PatientSessions,
-	//CurrentTestRun
-
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -26,92 +24,9 @@ export const api = axios.create({
 	},
 });
 
-// export interface DefaultUser {
-// 	dni: string;
-// 	nombre: string;
-// 	apellidos: string;
-// 	centro_medico: string;
-// 	email: string;
-// 	contrasena: string;
-// }
-
-// export interface RegisterPatient extends DefaultUser {
-// 	sexo: string;
-// 	fecha_nacimiento: string;
-// }
-
-// export interface MedicoRegistro extends DefaultUser {}
-
-// export interface ApiResponse<responseData = unknown> {
-// 	success: boolean;
-// 	message: string;
-// 	payload?: responseData;
-// }
-
-// export interface LoginData {
-// 	email: string;
-// 	password: string;
-// }
-
-// export interface LoginResponse {
-// 	success: boolean;
-// 	message: string;
-// 	access_token: string;
-// 	token_type: string;
-// 	user_rol: string;
-// 	name: string;
-// }
-
-// export interface UserResponse {
-// 	dni: string;
-// 	nombre: string;
-// 	apellidos: string;
-// 	email: string;
-// 	centro_medico: string;
-// }
-
-// export interface DoctorList {
-// 	dni: string;
-// 	nombre: string;
-// 	apellidos: string;
-// }
-
-// export interface PatientsList { 
-// 	dni: string;
-// 	nombre: string;
-// 	apellidos: string;
-// }
-
-// export interface AfasiaTestConfig {
-// 	dni_paciente: string;
-// 	nivel: string;
-// 	cantidad_pruebas: number;
-// 	tiempo_limite_por_prueba: number;
-// 	imagenes_aleatorias: boolean;
-// }
-
-// export interface PatientSessions {
-// 	id_sesion: number;
-// 	nombre_sesion: string;
-// 	nivel: 'Facil' | 'Medio' | 'Dificil';
-// 	cantidad_pruebas: number;
-// 	tiempo_limite_por_prueba: number;
-// 	imagenes_aleatorias: boolean;
-// }
-
-// export interface CurrentTestRun{
-// 	id_ejecucion_prueba: number;
-// }
-
-//export type SessionsListResponse = ApiResponse<PatientSessions[]>;
-
 export type UserResponseData = ApiResponse<UserResponse>;
 
-//export type DoctorListResponse = ApiResponse<DoctorList[]>;
-
 export type PatientsListResponse = ApiResponse<PatientsList[]>;
-
-//export type CurrentTestRunResponse = ApiResponse<CurrentTestRun>;
 
 api.interceptors.request.use(
 	(config) => {
@@ -137,7 +52,7 @@ export const registerPatient = async (patientData: RegisterPatient): Promise<Use
 		return response.data;
 	} catch (error) {
 		if (axios.isAxiosError(error) && error.response) {
-			throw new Error(error.response.data.message || 'Error al registrar paciente');
+			throw new Error(error.response.data.detail || 'Error al registrar paciente');
 		}
 		throw new Error('Error al registrar paciente');
 	}
@@ -161,7 +76,7 @@ export const registerDoctor = async (medicoData: MedicoRegistro): Promise<UserRe
 					throw new Error(details);
 				}
 			}
-			throw new Error(error.response.data.message || 'Error al registrar médico');
+			throw new Error(error.response.data.detail || 'Error al registrar médico');
 		}
 		throw new Error('Error al registrar médico');
 	}
@@ -215,7 +130,6 @@ export const getToken = (): string | null => {
 
 export const getDoctorList = async (): Promise<DoctorList[]> => {
 	try {
-		//const response = await api.get<DoctorListResponse>('/doctor/list');
 		const response = await api.get<ApiResponse<DoctorList[]>>('/doctor/list');
 		if (!response.data.success) {
 			throw new Error(response.data.message || 'Error al obtener la lista de doctores');
@@ -232,11 +146,9 @@ export const getDoctorList = async (): Promise<DoctorList[]> => {
 export const getPatientsListPerDoctor = async (): Promise<PatientsList[]> => {
 	try {
 		const token = localStorage.getItem('access_token');
-		console.log('Token obtenido para lista de pacientes por doctor: ' + token);
 		if (!token) {
 			throw new Error('Usuario no autenticado');
 		}
-		//const response = await api.get<PatientsListResponse>(`/doctor/listOfPatients`);
 		const response = await api.get<ApiResponse<PatientsList[]>>(`/doctor/listOfPatients`);
 		if (!response.data.success) {
 			throw new Error(response.data.message || 'Error al obtener la lista de pacientes');
@@ -270,7 +182,6 @@ export const getTotalOfWords = async (): Promise<number> => {
 
 export const configureAfasiaSessions = async (configData: AfasiaTestConfig): Promise<ApiResponse> => {
 	try {
-		console.log('Datos enviados para configurar sesiones:' + JSON.stringify(configData));
 		const response = await api.post<ApiResponse>('configuration-sessions/configure', configData);
 		if (!response.data.success) {
 			throw new Error(response.data.message || 'Error al configurar las sesiones de afasia');
@@ -287,7 +198,6 @@ export const configureAfasiaSessions = async (configData: AfasiaTestConfig): Pro
 export const getSessionsListPerPatient = async (dniPaciente ?:string): Promise<PatientSessions[]> => {
 	try {
 		const requestBody = dniPaciente ? { patient_dni: dniPaciente } : {};
-		// const response = await api.post<SessionsListResponse>('/afasia-tests-sessions/patient-sessions-list', requestBody);
 		const response = await api.post<ApiResponse<PatientSessions[]>>('/afasia-tests-sessions/patient-sessions-list', requestBody);
 		if (!response.data.success) {
 			throw new Error(response.data.message || 'Error al obtener la lista de sesiones del paciente');
@@ -448,7 +358,6 @@ export const saveInstanceSessionAsCompleted = async(id_session_instance: number)
 		throw error
 	}
 }
-
 
 export const isSessionInstanceCompleted = async(sessionId: number): Promise<ApiResponse> => {
 	try{

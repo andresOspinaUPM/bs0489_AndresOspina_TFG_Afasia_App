@@ -31,7 +31,6 @@ async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
 
             if instance_existing:
                 print(f"Ya existe una instancia activa y no se ha completado: {instance_existing[0]}")
-                print(f"sesion: {id_sesion}")
                 await delete_incomplete_instance_session(cursor, instance_existing[0])
 
             cursor.execute(
@@ -114,7 +113,6 @@ async def insert_random_test_into_prueba_aleatoria(id_session_instance: int, tot
         with get_db_connection(database) as conn:
             cursor = conn.cursor()
             random_words = await get_random_words_from_db(cursor, total_tests, nivel)
-            print(f"Palabras aleatorias obtenidas: {random_words}")
             orden_prueba = 1
             for (id_palabra,) in random_words:
                 cursor.execute( 
@@ -302,7 +300,7 @@ async def get_description_localizacion_by_palabra(id_palabra: int) -> Optional[s
         with get_db_connection(database) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                """
+            """
             SELECT l.descripcion FROM localizacion AS l
             INNER JOIN palabra_localizacion AS pl ON l.id_localizacion = pl.id_localizacion
             WHERE pl.id_palabra = ?
@@ -369,7 +367,6 @@ async def save_response(test_response: TestResponse) -> Optional[int]:
         )
 
 async def save_session_instance_as_completed(id_session_instance: int, date: str, is_completed: bool):
-    print(f'BE id_intancia: {id_session_instance}, date: {date}, is_completed: {is_completed}')
     try:
         with get_db_connection(database) as conn:
             cursor = conn.cursor()

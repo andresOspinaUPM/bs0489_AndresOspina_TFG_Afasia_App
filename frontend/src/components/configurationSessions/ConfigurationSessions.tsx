@@ -30,7 +30,6 @@ const getPatientsList = async()=>{
 		const response = await getPatientsListPerDoctor();
 		if(response.length > 0){
 			setPatientsList(response);
-			console.log('Pacientes obtenidos:', response);
 		}else{
 			throw new Error ('No se encontraron pacientes asignados al médico.');
 		}
@@ -46,13 +45,11 @@ const getTotalWordsAvailable = async () => {
 	try{
 		const response = await getTotalOfWords();
 		setTotalWordsAvailable(response);
-		console.log('Total de palabras disponibles:', response);
 	}catch(error){
 		setTotalWordsAvailable(0);
 		throw new Error('Error al obtener el total de palabras disponibles.');
 	}
 };
-
 
 useEffect(() => {
   getPatientsList();
@@ -110,6 +107,8 @@ const handleTotalTestsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 }
 
 const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const MIN_SESSION_TIME = 1;
+	const MAX_SESSION_TIME = 10;
 	const value = e.target.value;
 	const numberValue = parseInt(value);
 	const { name } = e.target;
@@ -123,8 +122,13 @@ const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		return;
 	}
 
-	if (isNaN(numberValue) || numberValue < 1) {
+	if (isNaN(numberValue) || numberValue < MIN_SESSION_TIME) {
 		setError('Por favor, ingrese un número válido mayor 0.');
+		return;
+	}
+
+	if(numberValue > MAX_SESSION_TIME){
+		setError(`El tiempo máximo por prueba es ${MAX_SESSION_TIME} minutos.`);
 		return;
 	}
 	if(error) setError('');

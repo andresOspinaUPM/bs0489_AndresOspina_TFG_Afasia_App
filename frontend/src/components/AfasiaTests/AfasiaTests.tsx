@@ -18,6 +18,7 @@ import {
 	saveInstanceSessionAsCompleted,
 	removeSessionInstance
 } from '../../services/api';
+import { formatTime, capitalize } from '../../utils/format';
 
 function AfasiaTests() {
 	const { sessionId } = useParams<{ sessionId: string }>();
@@ -52,6 +53,7 @@ function AfasiaTests() {
 	const testResponseRef = useRef<TestResponse | null>(null)
 	const sessionInstanceStartedRef = useRef(false);
 	const initialLoadRef = useRef(false);
+	const testReadyRef = useRef(false);
 	const isTestCompletedRef = useRef(false);
 
 	// *********************** UseEffects ***************************************
@@ -69,10 +71,8 @@ function AfasiaTests() {
 	},[])
 
 	useEffect(() => {
-		console.log('AfasiaTests MONTADO');
 		activateActivityMonitoring();
 		return() => {
-			console.log('AfasiaTests DESMONTADO');
 			deactivateActivityMonitoring()
 		}
 	},[])
@@ -82,7 +82,6 @@ function AfasiaTests() {
 
 		if (session && session.id_sesion.toString() === sessionId) {
 			initialLoadRef.current = true;
-			console.log('datos de la sesion', session);
 			return;
 		}
 		// ************ EN CASE DE RELOAD DE LA PAGINA ************
@@ -93,25 +92,14 @@ function AfasiaTests() {
 				initialLoadRef.current = true;
 				resetTestsData();
 				memFetchSession(id);
-				console.log('datos de la sesion', session);
 			}
 		}
 	}, [session, sessionId, memFetchSession]);
 
 	useEffect(() => {
-		if (!session) {
-			console.log('No hay sesión disponible todavía');
-			return;
-		}
-		if (sessionInstanceId) {
-			console.log('Ya existe una instancia:', sessionInstanceId);
-			return;
-		}
-		if (sessionInstanceStartedRef.current) {
-			console.log('Ya se inició la instancia anteriormente');
-			return;
-		}
-		console.log('Iniciando nueva instancia de sesión...');
+		if (!session) return;
+		if (sessionInstanceId) return;
+		if (sessionInstanceStartedRef.current) return;
 		sessionInstanceStartedRef.current = true;
 		startInstanceOfSession(session.id_sesion);
 	}, [session, sessionInstanceId]);
@@ -120,30 +108,24 @@ function AfasiaTests() {
 		if (!session) return;
 		if (testWordData.length > 0) return;
 		if(session.imagenes_aleatorias && !sessionInstanceId){
-			console.log('Esperando sessionInstanceId para cargar tests aleatorios...');
 			return;
 		}
 		if(loadTestsRef.current){
-			console.log('Datos ya cargados');
 			return
 		}
 		const loadTestData = async () => {
 			try {
 				loadTestsRef.current = true;
 				setLoadingTest(true);
-				console.log(`Cargando los datos de la primera prueba para la sesion: ${sessionId}`);
 				let response: TestData[];
 				if (!session.imagenes_aleatorias) {
-					console.log('Las imágenes no son aleatorias para esta sesión.');
 					response = await getPredefinedTestData(session.id_sesion);
 				} else {
-					console.log('Las imágenes son aleatorias para esta sesión.');
 					response = await getRandomTestData(sessionInstanceId as number, session.cantidad_pruebas, session.nivel);
 				}
-				console.log('Datos de la prueba cargada:', response);
 				setTestWordData(response);
 			} catch (error) {
-				console.log('Error al cargar los datos de la prueba inicial');
+				console.error('Error al cargar los datos de la prueba inicial');
 			} finally {
 				setLoadingTest(false);
 			}
@@ -154,52 +136,54 @@ function AfasiaTests() {
 	useEffect(() => {
 		if (testWordData.length === 0) return;
 		if (currentTest < 1 || currentTest > testWordData.length) return;
+		if (!sessionInstanceId) return;
 		if(currentTestRef.current === currentTest){
-			console.log('prueba actual ya cargada');
 			return
 		}
 		isTestResponseRef.current = false;
 		currentTestRef.current = currentTest;
 		const loadCurrentTestData = async () => {
 			try {
+				testReadyRef.current = false;
 				const testData = testWordData[currentTest - 1];
-				console.log(`datos de la palabra actual ${testData.nombre_palabra}:`, testData);
 				if (!testData) {
-					console.log(`No se ha encontrado la prueba ${currentTest}`);
 					return;
 				}
 				setCurrentTestData(testData);
 				if (testData.id_palabra) {
 					currentTestRunRef.current = await saveCurrentTestRun(sessionInstanceId as number, testData.id_palabra)
-					console.log(`se guarda registro de la ejecucion de la prueba con id: ${currentTestRunRef.current}`)
 					if(!currentTestRunRef.current){
-						console.log(`Error al guardar el registro de la prueba actual`);
+						console.error(`Error al guardar el registro de la prueba actual`);
 						return;
 					}
-					console.log(`Se buscaran las decripciones de la palabra con ID: ${testData.id_palabra}`);
 					const descriptions = await getCurrentTestDescriptions(testData.id_palabra);
 					setDescriptionData(descriptions);
-					console.log(`descripciones actuales de la palabra ${testData.nombre_palabra}`, descriptions);
 				}
+				setTestTime(0);
+				setVisibleDescriptions(Array(6).fill(false));
+				setUserAnswer('');
 			} catch (error) {
-				console.log(
+				console.error(
 					`Error al obtener las respectivas descripciones de la palabra ${currentTestData?.nombre_palabra}`
 				);
+			}finally{
+				testReadyRef.current = true;
 			}
 		};
 		loadCurrentTestData();
-		setTestTime(0);
-		setVisibleDescriptions(Array(6).fill(false));
-		setUserAnswer('');
 	}, [currentTest, testWordData.length, sessionInstanceId]);
 
 	useEffect(() => {
-		if (isTestCompleted || showNavigationModal) return;
+		if (isTestCompleted || showNavigationModal ) return;
 		const testInterval = setInterval(() => {
-			setTestTime((prev) => prev + 1);
+			if(testReadyRef.current) {
+				setTestTime((prev) => prev + 1);
+			}
 		}, 1000);
 
-		return () => clearInterval(testInterval);
+		return () => {
+			clearInterval(testInterval);
+		}
 	}, [isTestCompleted, showNavigationModal]);
 
 	useEffect(() => {
@@ -211,9 +195,10 @@ function AfasiaTests() {
 		if (!currentTestData || !session) return;
 		const totalTimeForDescriptions = session.tiempo_limite_por_prueba / 2;
 		const secondsPerDescription = Math.floor(totalTimeForDescriptions / totalOfDescriptions);
+		const timeInSecondHalf = testTime - totalTimeForDescriptions;
 
-		if (testTime > 0 && testTime <= totalTimeForDescriptions && testTime % secondsPerDescription === 0) {
-			const descriptionIndex = Math.floor(testTime / secondsPerDescription) - 1;
+		if (timeInSecondHalf >= 0 && timeInSecondHalf % secondsPerDescription === 0 ) {
+			const descriptionIndex = Math.floor(timeInSecondHalf / secondsPerDescription);
 			if (descriptionIndex >= 0 && descriptionIndex < totalOfDescriptions) {
 				setVisibleDescriptions((prevVisibleDescriptions) => {
 					const newVisibleDescriptions = [...prevVisibleDescriptions];
@@ -225,10 +210,7 @@ function AfasiaTests() {
 	}, [testTime, currentTestData, session, session?.tiempo_limite_por_prueba]);
 
 	useEffect(() => {
-		if(isTestResponseRef.current){
-			console.log("la prueba ya se ha respondido");
-			return
-		}
+		if(isTestResponseRef.current) return;
 		if (!currentTestData || !session) return;
 		const timeLimit = session.tiempo_limite_por_prueba;
 		if (testTime >= timeLimit && !isTestCompleted && !isTestResponseRef.current) {
@@ -239,7 +221,7 @@ function AfasiaTests() {
 						...prevResults,
 						{
 							palabraObjetivo: currentTestData?.nombre_palabra.trim().toLowerCase() || '',
-							resultado: 'fallado',
+							resultado: 'Fallado',
 							tiempo: testTime,
 						},
 					]);
@@ -261,7 +243,7 @@ function AfasiaTests() {
 						setShowModal(true);
 					}
 				}catch(error){
-					console.log(`Error en el timeout de la prueba ${error}`)
+					console.error(`Error en el timeout de la prueba ${error}`)
 					if (session?.cantidad_pruebas && currentTestRef.current < session.cantidad_pruebas) {
             setCurrentTest(prev => prev + 1);
 					} else {
@@ -289,28 +271,21 @@ function AfasiaTests() {
 		setUserAnswer('');
 		setTestResults([]);
 	};
-	const formatTime = (seconds: number): string => {
-		const minutes = Math.floor(seconds / 60);
-		const remainingSeconds = seconds % 60;
-		return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-	};
 
 	const startInstanceOfSession = async (sessionId: number) => {
 		try {
-			console.log(`Iniciando la sesión de pruebas para la sesión ID: ${sessionId}`);
 			const response = await startSessionInstance(sessionId);
 			if (response.payload === undefined) {
-				throw new Error('No se obtuvo el ID de la instancia de sesión');
+				console.error('No se obtuvo el ID de la instancia de sesión');
+				alert('Error al iniciar la sesión de pruebas. Por favor, intentalo nuevamente');
 			} else {
 				setSessionInstanceId(response.payload as number);
 				setContextSessionInstance(response.payload as number);
 			}
-			console.log('Sesión de pruebas iniciada con ID de instancia:', response.payload);
 		} catch (error) {
-			console.log('Error al iniciar instancia de sesion:', error);
 			sessionInstanceStartedRef.current = false;
 			alert('Error al iniciar la sesión de pruebas. Por favor, recarga la página.');
-			throw new Error('Error al iniciar la sesión de pruebas');
+			console.error('Error al iniciar la sesión de pruebas');
 		}
 	};
 
@@ -318,23 +293,21 @@ function AfasiaTests() {
 		try{
 			const response = await saveTestResponse(saveCurrentTestResponse);
 			if(!response.success){
-				throw new Error ('ha habido un error al guardar la respuesta de la prueba actual')
+				console.error('ha habido un error al guardar la respuesta de la prueba actual')
 			}
 		}catch(error){
-			console.log('Error al guardar la respuesta de la prueba', error)
+			console.error('Error al guardar la respuesta de la prueba', error)
 		}
 	}
 
 	const saveSessionInstanceAsCompleted = async(sessionInstanceId: number) => {
 		try{
-			console.log(`se intenta marcar como completada la instancia de sesion: ${sessionInstanceId}`);
 			const response = await saveInstanceSessionAsCompleted(sessionInstanceId)
 			if(!response.success){
-				throw new Error ('Error al guardas la sesion como completada')
+				console.error('Error al guardas la sesion como completada')
 			}
 		}catch(error){
-			console.log('Error al marcar la instancia de la session como completada', error);
-			throw error;
+			console.error('Error al marcar la instancia de la session como completada', error);
 		}
 	}
 
@@ -348,11 +321,11 @@ function AfasiaTests() {
 			return;
 		}
 		const userAnswerNormalized = userAnswer.trim().toLowerCase();
-		const correctWordNormalized = currentTestData?.nombre_palabra.trim().toLowerCase().trim().toLowerCase();
+		const correctWordNormalized = currentTestData?.nombre_palabra.trim().toLowerCase();
 		if (userAnswerNormalized === correctWordNormalized) {
 			setTestResults((prevResults) => [
 				...prevResults,
-				{ palabraObjetivo: correctWordNormalized, resultado: 'acertado', tiempo: testTime },
+				{ palabraObjetivo: correctWordNormalized, resultado: 'Acertado', tiempo: testTime },
 			]);
 			isTestResponseRef.current = true;
 			testResponseRef. current = {
@@ -373,7 +346,7 @@ function AfasiaTests() {
 						isTestCompletedRef.current = true;
 						setShowModal(true);
 					}catch(error){
-						console.log('No se pudo marcar la sesion como completada: ', error);
+						console.error('No se pudo marcar la sesion como completada: ', error);
 						alert('Error al guardar los datos')
 					}
 				}
@@ -432,11 +405,11 @@ function AfasiaTests() {
 							</thead>
 							<tbody>
 								{
-								testResults.map((resultado, index) => (
+								testResults.map((result, index) => (
 									<tr key= {`${index}`}>
-										<td>{resultado.palabraObjetivo}</td>
-										<td>{formatTime(resultado.tiempo)}</td>
-										<td>{resultado.resultado}</td>
+										<td>{capitalize(result.palabraObjetivo)}</td>
+										<td>{formatTime(result.tiempo)}</td>
+										<td>{result.resultado}</td>
 									</tr>
 								))
 								}
@@ -462,7 +435,7 @@ function AfasiaTests() {
 					{testResults.length > 0 ? (
 						testResults.map((result, index) => (
 							<p className={style['result-item']} key={index}>
-								{result.palabraObjetivo} - {result.resultado}
+								{capitalize(result.palabraObjetivo)} - {result.resultado}
 							</p>
 						))
 					) : (

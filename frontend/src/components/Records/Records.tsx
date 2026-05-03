@@ -7,8 +7,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom'; 
 import {isSessionInstanceCompleted, getInstancesSessionRecords, getAnsweredWords, getRecordsByWord} from '../../services/api' 
 import { SessionInstanceRecords } from '../../types';
-
-// type ContentType = 'doctor' | 'patient';
+import { capitalize, formatDate, formatTime } from '../../utils/format';
 
 function Records() {
 
@@ -31,13 +30,10 @@ function Records() {
 		const hasInstanceCompleted = async (sessionId: number) => {
 			if(isInstanceCompletedChecked.current) return
 			try{
-				console.log(`Se intenta saber si existe una instancia completada para la sesion ${sessionId}`)
 				const isSessionInstCompleted = await isSessionInstanceCompleted(sessionId);
 				if(!isSessionInstCompleted.success){
-					console.log('No hay instancias completadas para la sesion', sessionId);
 					return
 				}
-				console.log(`Existe al menos una instancia completada para la sesion ${sessionId}`)
 				isInstanceCompletedChecked.current = true;
 				setExistSessionInstance(true);
 				await Promise.all([
@@ -45,7 +41,7 @@ function Records() {
 					getWordsAnswered(sessionId)
 				]);
 			}catch(error){
-				console.log("Error al obtener si se ha completado al menos una instancia de la sesion", error);
+				console.error("Error al obtener si se ha completado al menos una instancia de la sesion", error);
 				return
 			}
 		}
@@ -60,13 +56,13 @@ function Records() {
 		try{
 				const instancesRecords = await getInstancesSessionRecords (sessionId)
 				if(!instancesRecords){
-					console.log('No hay registros de sesiones en la base de datos')
+					console.error('No hay registros de sesiones en la base de datos')
 					return
 				}
 				setSessionIntancesRecords(instancesRecords);
 				recordsLoaded.current = true;
 		}catch(error){
-			console.log(`Error al obtener los registros: ${error}`);
+			console.error(`Error al obtener los registros: ${error}`);
 		}
 	}
 
@@ -76,26 +72,10 @@ function Records() {
 			const words = await getAnsweredWords(sessionId);
 			setAnsweredWords(words);
 			answeredWordsLoaded.current = true;
-			console.log(`Palabras obtenidas: ${words.length}: `, words);
-			console.log(`${answeredWords}`);
 		}catch(error){
-			console.log(`No se pudieron obtener las palabras respondidas para la session ${sessionId}: ${error}`);
+			console.error(`No se pudieron obtener las palabras respondidas para la session ${sessionId}: ${error}`);
 		}
 	}
-
-	const formatDate = (date: string): string =>{
-		return new Date(date).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
-	}
-
-	const formatTime = (seconds: number): string => {
-		const minutes = Math.floor(seconds / 60);
-		const remainingSeconds = seconds % 60;
-		return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-	};
 
 	const handleSelectedWord = async(word: string) => {
 		try{
@@ -107,7 +87,7 @@ function Records() {
 				setShowRecordsPerWord(true);
 			}
 		}catch(error){
-			console.log(`No se pudieron obtener los registros de la palabra seleccionada: ${error}`);
+			console.error(`No se pudieron obtener los registros de la palabra seleccionada: ${error}`);
 		}
 	}
 
@@ -159,7 +139,7 @@ function Records() {
 							instance.respuestas.map((respuesta, index) => (
 								<tr key={`${instance.id_instancia}-${index}`}>
 									<td>Intento {instanceIndex +1}</td>
-									<td>{respuesta.nombre_palabra}</td>
+									<td>{capitalize(respuesta.nombre_palabra)}</td>
 									<td>{formatDate(respuesta.fecha_respuesta)}</td>
 									<td>{formatTime(respuesta.tiempo_respuesta)}</td>
 									<td>{respuesta.respuesta_correcta ? 'Palabra Acertada' : 'Palabra Fallada'}</td>
@@ -183,7 +163,7 @@ function Records() {
 							instance.respuestas.map((respuesta, index) => (
 								<tr key={`${instance.id_instancia}-${instanceIndex}-${index}`}>
 
-									<td>{respuesta.nombre_palabra}</td>
+									<td>{capitalize(respuesta.nombre_palabra)}</td>
 									<td>{formatDate(respuesta.fecha_respuesta)}</td>
 									<td>{formatTime(respuesta.tiempo_respuesta)}</td>
 									<td>{respuesta.respuesta_correcta ? 'Palabra Acertada' : 'Palabra Fallada'}</td>

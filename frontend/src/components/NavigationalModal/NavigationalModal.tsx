@@ -12,7 +12,7 @@ const NavigationalModal = () => {
     try{
       if(sessionInstanceId !== null) await removeSessionInstance(sessionInstanceId);
     }catch(error){
-      console.log('error al eliminar la instancia de sesion con id: '+ sessionInstanceId + 'por abandono')
+      console.error('error al eliminar la instancia de sesion con id: '+ sessionInstanceId + 'por abandono')
     }finally{
       confirmNavigation();
     }

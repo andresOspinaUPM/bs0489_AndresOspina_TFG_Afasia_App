@@ -77,8 +77,6 @@ class PatientSessionsRequest(BaseModel):
 async def get_patient_sessions_list(request: PatientSessionsRequest, current_patient: dict = Depends(get_current_user)):
     try:
         dni_patient = request.patient_dni if request.patient_dni else current_patient.get('dni') 
-        # dni_patient = current_patient.get('dni')
-        print(f'DNI Paciente: {dni_patient}')
         sessions_list = await get_sessions_list_per_patient_from_db(dni_patient)
         response_data = {
         "success": True,
@@ -96,11 +94,8 @@ async def get_patient_sessions_list(request: PatientSessionsRequest, current_pat
         )
 
 @router.get('/session/{id_sesion}', status_code=status.HTTP_200_OK)
-async def get_session_by_id(id_sesion: int, current_patient: dict = Depends(get_current_user)):
+async def get_session_by_id(id_sesion: int):
     try:
-        print(f'Current patient data: {current_patient}')
-        dni_patient = current_patient.get('dni')
-        print(f'DNI Paciente: {dni_patient}')
         session = await get_session_by_id_from_db(id_sesion)
         if session is None:
             raise HTTPException(

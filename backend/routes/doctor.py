@@ -39,7 +39,7 @@ async def insert_doctors_to_db(doctor: UsuarioBase):
     except sqlite3.IntegrityError as e:
         raise HTTPException(
             status_code = status.HTTP_400_BAD_REQUEST,
-            detail = "Ya existe un usuario con ese DNI o email"
+            detail = "Ya existe un médico con ese DNI o email"
         )
     
     except ValueError as e:
@@ -151,16 +151,13 @@ async def register_doctor(doctor: UsuarioBase):
             content=response_data
         )
 
-    except sqlite3.IntegrityError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ya existe un usuario con ese DNI o email"
-        )
+    except HTTPException:
+        raise
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al registrar el doctor...."
+            detail=f"Error al registrar el doctor:{str(e)}"
         )
 
 @router.get('/list', status_code=status.HTTP_200_OK)
@@ -176,6 +173,10 @@ async def list_doctors():
             status_code=status.HTTP_200_OK,
             content=response_data
         )
+    
+    except HTTPException:
+        raise
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -185,9 +186,7 @@ async def list_doctors():
 @router.get('/listOfPatients', status_code=status.HTTP_200_OK)
 async def list_doctor_patients(current_doctor: dict = Depends(get_current_user)):
     try:
-        print(f"Entra al doctor.py /listOfPatients/ endpoint")
         doctor_dni = current_doctor.get("dni")
-        print(f"Doctor DNI: {doctor_dni}")
         patients = await get_doctor_patients(doctor_dni)
         response_data = {
             "success": True,
@@ -198,6 +197,10 @@ async def list_doctor_patients(current_doctor: dict = Depends(get_current_user))
             status_code=status.HTTP_200_OK,
             content=response_data
         )
+    
+    except HTTPException:
+        raise
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

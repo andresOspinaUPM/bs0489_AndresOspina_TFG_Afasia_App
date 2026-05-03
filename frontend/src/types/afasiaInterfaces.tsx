@@ -96,10 +96,6 @@ export interface PatientSessions {
   imagenes_aleatorias: boolean;
 }
 
-// export interface CurrentTestRun{
-//   id_ejecucion_prueba: number;
-// }
-
 export interface PatientContextType{
   selectedPatient: PatientData | null;
   setSelectedPatient: (patient: PatientData | null) => void;
@@ -151,7 +147,7 @@ export interface TestDescriptions{
 
 export interface TestResult{
     palabraObjetivo: string;
-    resultado: "acertado" | "fallado";
+    resultado: "Acertado" | "Fallado";
     tiempo: number;
 }
 
@@ -174,7 +170,6 @@ export interface SessionInstanceRecords{
 }
 
 export interface UserActivityContextType {
-  //isActivityMonitoringActiveRef: boolean;
   showNavigationModal: boolean;
   activateActivityMonitoring: () => void;
   deactivateActivityMonitoring: () => void;

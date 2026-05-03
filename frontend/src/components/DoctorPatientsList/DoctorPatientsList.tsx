@@ -23,9 +23,8 @@ function PatientsListForDoctorRecords() {
       const response = await getPatientsListPerDoctor();
       if(response.length > 0){
         setPatientsList(response);
-        console.log('Pacientes obtenidos:', response);
       }else{
-        throw new Error ('No se encontraron pacientes asignados al médico.');
+        console.error('No se encontraron pacientes asignados al médico.');
       }
     }catch(error){
       setPatientsList([]);
@@ -37,7 +36,6 @@ function PatientsListForDoctorRecords() {
 
   const handleSelectedPatient = (patient: PatientData) => {
     setSelectedPatient(patient);
-    console.log('PacienteSeleccionado: ', patient)
   }
 
   if (loadingPatients){
@@ -56,25 +54,29 @@ function PatientsListForDoctorRecords() {
     <div className={style['container']}>
       <div className={style['table-container']}>
         <h1>Listado de Pacientes</h1>
-        <Table striped className={style['doctor-patients-table']}>
-          <thead>
-            <tr>
-              <th>Nombre Paciente</th>
-            </tr>
-          </thead>
-          <tbody>
-            {patientsList.map((patient) => (
-              <tr key={patient.dni}>
-                <td>{patient.nombre} {patient.apellidos}</td>
-                <td>
-                  <Link to={`/doctor/pacientes/${patient.nombre}/lista-pruebas`}
-                  onClick={() => handleSelectedPatient(patient)}
-                  > Ver Pruebas Asignadas</Link>
-                </td>
+        {patientsList.length == 0 ? (
+          <p>No hay ningún paciente asignado.</p>
+        ) : (
+          <Table striped className={style['doctor-patients-table']}>
+            <thead>
+              <tr>
+                <th>Nombre Paciente</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {patientsList.map((patient) => (
+                <tr key={patient.dni}>
+                  <td>{patient.nombre} {patient.apellidos}</td>
+                  <td>
+                    <Link to={`/doctor/pacientes/${patient.nombre}/lista-pruebas`}
+                    onClick={() => handleSelectedPatient(patient)}
+                    > Ver Pruebas Asignadas</Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
       </div>
     </div>
   )

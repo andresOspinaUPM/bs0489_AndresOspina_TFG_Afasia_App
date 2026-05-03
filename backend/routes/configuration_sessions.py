@@ -42,7 +42,7 @@ async def insert_sesion_in_db (dni_doctor: str, config_data: dict):
                 """
                 ,
                 (
-                    f"Sesion {nivel} - {cantidad_pruebas} pruebas",
+                    f"Sesión {nivel} - {cantidad_pruebas} pruebas",
                     nivel,
                     cantidad_pruebas,
                     tiempo_limite_por_prueba,
@@ -50,12 +50,10 @@ async def insert_sesion_in_db (dni_doctor: str, config_data: dict):
                 )
             )
             id_sesion = cursor.lastrowid
-            print(f"ID Sesion creada: {id_sesion}")
             await insert_configuracion_sesion_in_db(cursor,dni_doctor, dni_paciente, id_sesion)
 
             if(not imagenes_aleatorias):
                 words = await configure_random_words_for_session(cursor, id_sesion, cantidad_pruebas, nivel)
-                print(f"Palabras aleatorias: {words}")
                 orden_prueba = 1
                 for word in words:
                     await insert_sesion_prueba_predefinida(cursor, id_sesion, word[0], orden_prueba)

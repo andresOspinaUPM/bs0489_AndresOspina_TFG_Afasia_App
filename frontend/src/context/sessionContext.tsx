@@ -7,7 +7,7 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export const useSessionContext = () => {
   const context = useContext(SessionContext);
   if(!context){
-    throw new Error ('useSession debe usarse dentro del SessionProvider');
+    throw new Error('useSessionContext debe usarse dentro del SessionProvider');
   }
   return context;
 }

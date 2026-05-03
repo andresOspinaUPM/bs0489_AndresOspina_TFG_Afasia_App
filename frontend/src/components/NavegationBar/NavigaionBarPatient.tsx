@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
@@ -12,7 +12,6 @@ import { useUserActivity } from "../../context/userActivityContext";
 function NavigationBarPatient() {
     const patientName = getUserName();
     const navigate = useNavigate();
-    const location = useLocation();
     const handleLogout = () => {
       logoutUsuario();
       navigate("/inicio");
@@ -21,12 +20,6 @@ function NavigationBarPatient() {
     const {handleNavigationAttempt} = useUserActivity();
 
     const navigateTo = (path: string) => {
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('NAVBAR: Click en navegación');
-    console.log('   Ruta actual:', location.pathname);
-    console.log('   Ruta destino:', path);
-    //console.log('   isActivityMonitoringActive:', isActivityMonitoringActive);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       handleNavigationAttempt(() => navigate(path))
     }
 

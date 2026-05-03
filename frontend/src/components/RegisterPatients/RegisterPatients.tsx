@@ -40,7 +40,6 @@ function RegisterPatient() {
       const response = await getDoctorList();
       if (response.length > 0) {
         setDoctorList(response);
-        console.log('Médicos obtenidos:', response);
       } else {
         setDoctorList([]);
         throw new Error('No se encontraron médicos disponibles.');
@@ -86,11 +85,12 @@ function RegisterPatient() {
   }
 
   const preparePatientData = (processedData: ReturnType<typeof cleanData>) => {
+    const firstLetterTouperCase = (str:string) => str.split(' ').map(word => word.charAt(0).toUpperCase()+word.slice(1).toLowerCase()).join(' ');
     return {
       dni: processedData.dni,
-      nombre: processedData.nombre.charAt(0).toUpperCase() + processedData.nombre.slice(1).toLowerCase(),
-      apellidos: processedData.apellidos.charAt(0).toUpperCase() + processedData.apellidos.slice(1).toLowerCase(),
-      centro_medico: processedData.centro_medico.charAt(0).toUpperCase() + processedData.centro_medico.slice(1).toLowerCase(),
+      nombre: firstLetterTouperCase(processedData.nombre),
+      apellidos: firstLetterTouperCase(processedData.apellidos),
+      centro_medico: firstLetterTouperCase(processedData.centro_medico),
       email: processedData.email,
       contrasena: processedData.contrasena,
       fecha_nacimiento: processedData.fecha_nacimiento,
@@ -151,6 +151,7 @@ const handleDoctorSelect = (doctorName: DoctorList) => {
       const response = await registerPatient(patientData);
 
       setMessage(`${response.message}. Bienvenido/a ${formData.nombre}`);
+      setRegisterErrors({});
       
       setFormData({
         dni: '',

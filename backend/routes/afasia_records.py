@@ -108,28 +108,6 @@ async def get_words_answered(id_session: int) -> list[dict]:
                 """
                 ,(id_session,)
             )
-            # if id_patient is None:
-            #     cursor.execute(
-            #         """
-            #         SELECT DISTINCT p.nombre_palabra FROM palabra AS p
-            #         INNER JOIN registro_ejecucion_prueba AS reg_p ON p.id_palabra = reg_p.id_palabra
-            #         INNER JOIN respuesta_prueba AS res_p ON reg_p.id_ejecucion_prueba = res_p.id_prueba
-            #         INNER JOIN instancia_sesion AS ins_s ON reg_p.id_instancia = ins_s.id_instancia
-            #         WHERE ins_s.id_sesion = ?
-            #         """
-            #         ,(id_session,)
-            #     )
-            # else:
-            #     cursor.execute(
-            #         """
-            #         SELECT DISTINCT p.nombre_palabra FROM palabra AS p
-            #         INNER JOIN registro_ejecucion_prueba AS reg_p ON p.id_palabra = reg_p.id_palabra
-            #         INNER JOIN respuesta_prueba AS res_p ON reg_p.id_ejecucion_prueba = res_p.id_prueba
-            #         INNER JOIN instancia_sesion AS ins_s ON reg_p.id_instancia = ins_s.id_instancia
-            #         WHERE ins_s.id_sesion = ? AND ins_s.id_paciente = ?
-            #         """
-            #         ,(id_session, id_patient)
-            #     )
             rows = cursor.fetchall()
             response_data = []
             for row in rows:
@@ -188,15 +166,6 @@ async def get_intances_records(id_session: int, current_patient: dict = Depends(
 async def get_answered_words(id_session: int, current_patient: dict = Depends(get_current_user)):
     try:
         words_responses = await get_words_answered(id_session)
-        # if user == 'patient':
-        #     words_responses = await get_words_answered(id_session, current_patient["dni"])
-        # elif user == 'doctor':
-        #     words_responses = await get_words_answered(id_session)
-        # else:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_400_BAD_REQUEST,
-        #         detail=f'Tipo de usuario no válido: {user}'
-        #     )
         response_data = {
             "success":True,
             "message":"Se han obtenido las palabras respondidas exitosamente",
