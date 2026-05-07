@@ -159,6 +159,7 @@ async def get_random_tests_data(id_session_instance: int) -> List[dict]:
                 INNER JOIN palabra AS p ON pa.id_palabra = p.id_palabra
                 LEFT JOIN imagen AS i ON p.id_imagen = i.id_imagen
                 WHERE pa.id_instancia = ?
+                ORDER BY pa.orden_prueba ASC
                 """
                 ,(id_session_instance,)
             )
