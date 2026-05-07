@@ -446,10 +446,17 @@ function AfasiaTests() {
 			{/*******************TESTS CARDS*******************/}
 			<div className={style['test-container']}>
 				<div className={style['test-cards-container']}>
-					<div className={style['image-card-container']}>
+				{currentTestData?.ruta_imagen
+				?<div className={style['image-card-container']}>
 						<img alt="Imagen-palabra" className={style['word-image']} src={currentTestData?.ruta_imagen as string} />
 					</div>
-
+					:
+					<div className={style['image-card-container']}>
+						<span className={style['word-image']} style={{display: 'block'}}>
+							{currentTestData?.nombre_palabra}
+						</span>
+					</div>
+				}
 					<div className={`${style['surrounding-card']} ${style['category-card']}`}>
 						<h4>Categoria - ¿Es un tipo de...?
 						</h4>

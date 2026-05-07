@@ -88,6 +88,7 @@ async def get_predefined_test_data(id_sesion: int) -> List[dict]:
                 INNER JOIN palabra AS p ON p.id_palabra = sp.id_palabra
                 LEFT JOIN imagen AS i ON p.id_imagen = i.id_imagen
                 WHERE sp.id_sesion = ?
+                ORDER BY sp.orden_prueba ASC
                 """,
                 (id_sesion,)
             )
