@@ -99,9 +99,9 @@ export const loginUser = async (loginData: LoginData): Promise<LoginResponse> =>
 		return response.data;
 	} catch (error) {
 		if (axios.isAxiosError(error) && error.response) {
-			throw new Error(error.response.data.message || 'Usuario o contraseña incorrectos');
+			throw new Error(error.response.data.message || 'El correo ingresado o contraseña incorrectos');
 		}
-		throw new Error('Usuario o contraseña incorrectos');
+		throw new Error('El correo ingresado o contraseña incorrectos');
 	}
 };
 
