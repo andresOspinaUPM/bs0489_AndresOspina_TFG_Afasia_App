@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import sqlite3
+from utils.password_utils import hash_password
+from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 from models.patient import PacienteBase
 from database.connection import get_db_connection
-import sqlite3
 
 
 router = APIRouter(prefix='/paciente', tags=['paciente'])
@@ -10,8 +11,9 @@ router = APIRouter(prefix='/paciente', tags=['paciente'])
 @router.post('/registro', status_code=status.HTTP_201_CREATED)
 async def registrar_paciente(paciente: PacienteBase):
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
+            contrasena_hasheada = hash_password(paciente.contrasena)
 
             cursor.execute(
                 """
@@ -23,7 +25,7 @@ async def registrar_paciente(paciente: PacienteBase):
                     paciente.nombre,
                     paciente.apellidos,
                     paciente.email,
-                    paciente.contrasena,
+                    contrasena_hasheada,
                     paciente.centro_medico
                 )
             )
@@ -62,11 +64,25 @@ async def registrar_paciente(paciente: PacienteBase):
                 status_code = status.HTTP_201_CREATED,
                 content=response_data
             )
-
+    except HTTPException:
+        raise
+    
     except sqlite3.IntegrityError as e:
-        raise HTTPException(
-            status_code = status.HTTP_400_BAD_REQUEST,
-            detail = "Ya existe un usuario con ese DNI o email"
+        error_message = str(e).lower()
+        if 'email' in error_message:
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un usuario registrado con ese email"
+        )
+        elif 'dni' in error_message:
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un usuario registrado con ese DNI"
+        )
+        else:
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un usuario con esos datos"
         )
     
     except ValueError as e:
@@ -75,7 +91,7 @@ async def registrar_paciente(paciente: PacienteBase):
             detail = f"Error de validación: {str(e)}"
         )
 
-    except Exception as e:
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al registrar el paciente: {str(e)}"

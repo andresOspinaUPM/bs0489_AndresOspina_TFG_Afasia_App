@@ -1,3 +1,4 @@
+import sqlite3
 from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from typing import List, Optional
@@ -8,11 +9,10 @@ from typing import Optional
 from datetime import datetime
 
 router = APIRouter(prefix='/afasia-tests', tags=['afasia_tests'])
-database = "afasia_database.db"
 
 async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
 
             cursor.execute(
@@ -43,7 +43,9 @@ async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
             id_session_instance = cursor.lastrowid
             conn.commit()
             return id_session_instance
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al iniciar la instancia de la sesión: {str(e)}"
@@ -76,10 +78,11 @@ async def delete_incomplete_instance_session(cursor, instance_id: int) -> None:
         """,
         (instance_id,)
     )
+    
 
 async def get_predefined_test_data(id_sesion: int) -> List[dict]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -103,7 +106,9 @@ async def get_predefined_test_data(id_sesion: int) -> List[dict]:
                 }
                 test_data.append(data)
             return test_data
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener los datos de la prueba: {str(e)}"
@@ -111,7 +116,7 @@ async def get_predefined_test_data(id_sesion: int) -> List[dict]:
 
 async def insert_random_test_into_prueba_aleatoria(id_session_instance: int, total_tests: int, nivel: str):
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             random_words = await get_random_words_from_db(cursor, total_tests, nivel)
             orden_prueba = 1
@@ -125,7 +130,9 @@ async def insert_random_test_into_prueba_aleatoria(id_session_instance: int, tot
                 )
                 orden_prueba += 1
             conn.commit()
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al guardar registrar las pruebas aleatorias en la base de datos: {str(e)}"
@@ -142,7 +149,9 @@ async def get_random_words_from_db(cursor, total_tests: int, nivel: str) -> list
         )
         random_words = cursor.fetchall()
         return random_words
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener palabras aleatorias: {str(e)}"
@@ -150,7 +159,7 @@ async def get_random_words_from_db(cursor, total_tests: int, nivel: str) -> list
 
 async def get_random_tests_data(id_session_instance: int) -> List[dict]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -174,7 +183,9 @@ async def get_random_tests_data(id_session_instance: int) -> List[dict]:
                 }
                 test_data.append(data)
             return test_data
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener los datos de la prueba: {str(e)}"
@@ -184,7 +195,7 @@ async def get_random_tests_data(id_session_instance: int) -> List[dict]:
 
 async def save_test_run(id_instance: int, id_word: int) -> Optional[int]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -196,7 +207,9 @@ async def save_test_run(id_instance: int, id_word: int) -> Optional[int]:
             conn.commit()
             response_id = cursor.lastrowid
             return response_id
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al guardar al registrar la ejecución de la prueba en la base de datos: {str(e)}"
@@ -207,7 +220,7 @@ async def save_test_run(id_instance: int, id_word: int) -> Optional[int]:
 
 async def get_description_categoria_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -222,7 +235,9 @@ async def get_description_categoria_by_palabra(id_palabra: int) -> Optional[str]
                 return row[0]
             else:
                 return None
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener la categoria de la palabra: {str(e)}"
@@ -230,7 +245,7 @@ async def get_description_categoria_by_palabra(id_palabra: int) -> Optional[str]
 
 async def get_description_uso_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
             """
@@ -245,7 +260,9 @@ async def get_description_uso_by_palabra(id_palabra: int) -> Optional[str]:
                 return row[0]
             else:
                 return None
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener el uso de la palabra: {str(e)}"
@@ -253,7 +270,7 @@ async def get_description_uso_by_palabra(id_palabra: int) -> Optional[str]:
 
 async def get_description_accion_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
             """
@@ -268,7 +285,9 @@ async def get_description_accion_by_palabra(id_palabra: int) -> Optional[str]:
                 return row[0]
             else:
                 return None
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener la accion de la palabra: {str(e)}"
@@ -276,7 +295,7 @@ async def get_description_accion_by_palabra(id_palabra: int) -> Optional[str]:
 
 async def get_description_propiedad_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
             """
@@ -291,7 +310,9 @@ async def get_description_propiedad_by_palabra(id_palabra: int) -> Optional[str]
                 return row[0]
             else:
                 return None
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener la propiedad de la palabra: {str(e)}"
@@ -299,7 +320,7 @@ async def get_description_propiedad_by_palabra(id_palabra: int) -> Optional[str]
 
 async def get_description_localizacion_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
             """
@@ -314,7 +335,9 @@ async def get_description_localizacion_by_palabra(id_palabra: int) -> Optional[s
                 return row[0]
             else:
                 return None
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener la localizacion de la palabra: {str(e)}"
@@ -322,7 +345,7 @@ async def get_description_localizacion_by_palabra(id_palabra: int) -> Optional[s
 
 async def get_description_asociacion_by_palabra(id_palabra: int) -> Optional[str]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
             """
@@ -337,7 +360,9 @@ async def get_description_asociacion_by_palabra(id_palabra: int) -> Optional[str
                 return row[0]
             else:
                 return None
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener la asociacion de la palabra: {str(e)}"
@@ -346,7 +371,7 @@ async def get_description_asociacion_by_palabra(id_palabra: int) -> Optional[str
 # # --------------- RESPONSE --------------- #
 async def save_response(test_response: TestResponse) -> Optional[int]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -362,7 +387,9 @@ async def save_response(test_response: TestResponse) -> Optional[int]:
             conn.commit()
             response_id=cursor.lastrowid
             return response_id
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al guardar la respuesta de la prueba: {str(e)}"
@@ -370,7 +397,7 @@ async def save_response(test_response: TestResponse) -> Optional[int]:
 
 async def save_session_instance_as_completed(id_session_instance: int, date: str, is_completed: bool):
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -381,7 +408,9 @@ async def save_session_instance_as_completed(id_session_instance: int, date: str
                 ,(date, is_completed, id_session_instance)
             )
             conn.commit()
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al guardar la instancia de la sesison como completada: {str(e)}"
@@ -389,7 +418,7 @@ async def save_session_instance_as_completed(id_session_instance: int, date: str
 
 async def delete_session_instance(id_session_instance: int):
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -404,17 +433,11 @@ async def delete_session_instance(id_session_instance: int):
             if not instance:
                 return
             
-            cursor.execute(
-                """
-                DELETE FROM instancia_sesion WHERE id_instancia = ?
-                """,
-                (id_session_instance,)
-            )
-
+            await delete_incomplete_instance_session(cursor, id_session_instance)
             conn.commit()
     except HTTPException:
         raise
-    except Exception as e:
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al intentar eliminar la instancia de sesión: {str(e)}"
@@ -437,11 +460,6 @@ async def start_session_endpoint(id_sesion: int, current_user: dict = Depends(ge
         )
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al iniciar la sesión {e}"
-        )
 
 @router.get('/test-data/{id_sesion}', status_code=status.HTTP_200_OK)
 async def start_session(id_sesion: int):
@@ -464,11 +482,6 @@ async def start_session(id_sesion: int):
         )
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al obtener los datos de la prueba: {str(e)}"
-        )
 
 @router.get('/random-test-data/{id_session_instance}/{total_tests}/{nivel}', status_code=status.HTTP_200_OK)
 async def get_random_test_data(id_session_instance: int, total_tests: int, nivel: str):
@@ -490,10 +503,7 @@ async def get_random_test_data(id_session_instance: int, total_tests: int, nivel
             content = response_data
         )
     except HTTPException:
-        raise HTTPException(
-            status_code= status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail= "Error al obtener los datos aleatorios de la prueba"
-        )
+        raise
 
 @router.get('/descriptions/{id_palabra}', status_code=status.HTTP_200_OK)
 async def get_descripciones_by_palabra(id_palabra: int):
@@ -527,11 +537,6 @@ async def get_descripciones_by_palabra(id_palabra: int):
         )
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al obtener las descripciones de la palabra: {str(e)}"
-        )
 
 @router.post('/save-current-test-run/{id_instance}/{id_word}', status_code=status.HTTP_200_OK)
 async def save_current_test_run(id_instance: int, id_word: int):
@@ -553,11 +558,6 @@ async def save_current_test_run(id_instance: int, id_word: int):
         )
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al guardar el registro de la prueba en ejecución {e}"
-        )
 
 
 
@@ -580,11 +580,6 @@ async def save_test_response(test_response: TestResponse, current_user: dict = D
         )
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al guardar la respuesta de la prueba {e}"
-        )
 
 @router.post('/set-session-completed/{id_session_instance}', status_code=status.HTTP_200_OK)
 async def save_session_as_completed(id_session_instance: int, current_user: dict = Depends(get_current_user)):
@@ -600,11 +595,6 @@ async def save_session_as_completed(id_session_instance: int, current_user: dict
         return response_data
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"BE - Error al marcar como completada la instancia de la sesion {e}"
-        )
 
 @router.delete('/remove-session-instance/{id_session_instance}', status_code=status.HTTP_200_OK)
 async def remove_session_instance(id_session_instance: int, current_user: dict = Depends(get_current_user)):
@@ -617,8 +607,3 @@ async def remove_session_instance(id_session_instance: int, current_user: dict =
         return response_data
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"BE - Error al intentar eliminar la instancia de sesion {e}"
-        )

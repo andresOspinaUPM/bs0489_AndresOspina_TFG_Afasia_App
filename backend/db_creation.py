@@ -18,7 +18,7 @@ def create_database(nombre_db = "afasia_database.db", script_sql = None):
         return False
 
     try:
-        conn = sqlite3.connect(nombre_db)
+        conn = sqlite3.connect(nombre_db, isolation_level=None)
         print(f"Conexión a la base de datos {nombre_db} exitosa.")
 
         cursor = conn.cursor()
@@ -27,7 +27,6 @@ def create_database(nombre_db = "afasia_database.db", script_sql = None):
         with open(script_sql, 'r', encoding = 'utf-8') as sql_file:
             script = sql_file.read()
             cursor.executescript(script)
-            conn.commit()
 
             conn.close()
             return True

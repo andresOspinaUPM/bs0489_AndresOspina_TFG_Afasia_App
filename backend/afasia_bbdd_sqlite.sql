@@ -2,7 +2,7 @@ CREATE TABLE usuario (
     dni TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
     apellidos TEXT NOT NULL,
-    email TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
     contrasena TEXT NOT NULL,
     centro_medico TEXT NOT NULL,
     fecha_registro DATETIME DEFAULT (datetime('now', 'localtime'))

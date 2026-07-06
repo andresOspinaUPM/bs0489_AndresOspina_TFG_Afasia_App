@@ -36,10 +36,6 @@ var/
 .installed.cfg
 *.egg
 
-###### To-do configurar las variables de entorno para mantener privada la configuracion y secretos
-backend/config/jwt_config.py
-backend/config/settings.py
-
 # Database
 *.sqlite3
 *.db
@@ -83,6 +79,7 @@ coverage/
 tmp/
 
 # Miscellaneous
+.env
 .env.local
 .env.development.local
 .env.test.local

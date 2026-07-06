@@ -4,10 +4,11 @@ from contextlib import asynccontextmanager
 from routes import doctor, patient, auth, afasia_tests, configuration_sessions, afasia_tests_sessions, afasia_records
 from db_creation import create_database
 from config.settings import APP_NAME, DEBUG
+from config.settings import DATABASE_PATH
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    success = create_database()
+    success = create_database(nombre_db=DATABASE_PATH)
     if success:
         print("Base de datos creada con éxito.")
     else:

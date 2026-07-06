@@ -83,8 +83,10 @@ export const validateCommonFields = (data: DefaultUser): Record<string, string> 
   if(data.contrasena !== undefined){
     if (!data.contrasena.trim()) {
       errors.contrasena = 'La contraseña es obligatoria y no puede estar vacía';
-    } else if (data.contrasena.length < 6) {
-      errors.contrasena = 'La contraseña debe tener al menos 6 caracteres';
+    } else if (data.contrasena.length < 8) {
+      errors.contrasena = 'La contraseña debe tener al menos de 8 caracteres';
+    }else if(data.contrasena.length > 64){
+      errors.contrasena = 'La contraseña debe tener como máximo 64 caracteres';
     }
   }
   return errors;

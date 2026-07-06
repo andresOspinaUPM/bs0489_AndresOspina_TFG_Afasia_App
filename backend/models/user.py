@@ -8,7 +8,7 @@ class UsuarioBase(BaseModel):
     apellidos: str = Field(..., min_length=1, max_length=50, description="Apellidos del usuario")
     email: str = Field(..., description="Email del usuario")
     centro_medico: str = Field(..., min_length=1, max_length=100, description="Centro médico del usuario")
-    contrasena: str = Field(..., min_length=8, max_length=100, description="Contraseña del usuario")
+    contrasena: str = Field(..., min_length=8, max_length=72, description="Contraseña del usuario")
 
     @validator('dni')
     def validate_dni(cls, value):

@@ -1,14 +1,14 @@
+import sqlite3
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
 from database.connection import get_db_connection
 from middleware.user_data import get_current_user
-import sqlite3
 
 router = APIRouter(prefix='/configuration-sessions', tags=['configuration-sessions'])
 
 async def get_total_words_from_db() -> int:
     try:
-        with get_db_connection('afasia_database.db') as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             result = cursor.execute(
                 """
@@ -17,7 +17,9 @@ async def get_total_words_from_db() -> int:
             )
             total_words = result.fetchone()[0]
             return total_words
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al obtener el total de palabras de la base de datos: {str(e)}"
@@ -33,7 +35,7 @@ async def insert_sesion_in_db (dni_doctor: str, config_data: dict):
         tiempo_limite_por_prueba = config_data.get("tiempo_limite_por_prueba")
         imagenes_aleatorias = config_data.get("imagenes_aleatorias", False)
 
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -60,7 +62,9 @@ async def insert_sesion_in_db (dni_doctor: str, config_data: dict):
                     orden_prueba += 1
 
             conn.commit()
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al configurar las sesiones en la base de datos: {str(e)}"
@@ -81,7 +85,9 @@ async def insert_configuracion_sesion_in_db(cursor, dni_doctor: str, dni_pacient
             )
         )
 
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al asignar la configuración de sesión al paciente: {str(e)}"
@@ -99,7 +105,9 @@ async def insert_sesion_prueba_predefinida(cursor, id_sesion: int, word_id: int,
             (id_sesion, word_id, orden_prueba)
         )
 
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al asignar palabra a la sesión: {str(e)}"
@@ -118,7 +126,10 @@ async def configure_random_words_for_session(cursor, id_sesion: int, cantidad_pr
         )
         returned_words = words.fetchall()
         return returned_words
-    except Exception as e:
+    
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al obtener palabras aleatorias: {str(e)}"
@@ -140,11 +151,8 @@ async def configure_sessions(config_data: dict, doctor_data: dict = Depends(get_
             status_code = status.HTTP_200_OK,
             content = response_data
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al configurar las sesiones: {str(e)}"
-        )
+    except HTTPException:
+        raise
     
 @router.get('/total-words', status_code=status.HTTP_200_OK)
 async def get_total_words():
@@ -159,8 +167,5 @@ async def get_total_words():
             status_code = status.HTTP_200_OK,
             content = response_data
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Error al obtener el total de palabras: {str(e)}"
-        )
+    except HTTPException:
+        raise

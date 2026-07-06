@@ -1,16 +1,18 @@
+import sqlite3
+from utils.password_utils import hash_password
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from models.user import UsuarioBase
 from database.connection import get_db_connection
-import sqlite3
 from middleware.user_data import get_current_user
 
 router = APIRouter(prefix='/doctor', tags=['doctor'])
 
 async def insert_doctors_to_db(doctor: UsuarioBase):
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
+            contrasena_hasheada = hash_password(doctor.contrasena)
 
             cursor.execute(
                 """
@@ -22,7 +24,7 @@ async def insert_doctors_to_db(doctor: UsuarioBase):
                     doctor.nombre,
                     doctor.apellidos,
                     doctor.email,
-                    doctor.contrasena,
+                    contrasena_hasheada,
                     doctor.centro_medico
                 )
             )
@@ -36,10 +38,24 @@ async def insert_doctors_to_db(doctor: UsuarioBase):
             )
 
             conn.commit()
+    except HTTPException:
+        raise
     except sqlite3.IntegrityError as e:
-        raise HTTPException(
-            status_code = status.HTTP_400_BAD_REQUEST,
-            detail = "Ya existe un médico con ese DNI o email"
+        error_message = str(e).lower()
+        if 'email' in error_message:
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un usuario registrado con ese email"
+        )
+        elif 'dni' in error_message:
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un usuario registrado con ese DNI"
+        )
+        else:
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe un usuario con esos datos"
         )
     
     except ValueError as e:
@@ -48,7 +64,7 @@ async def insert_doctors_to_db(doctor: UsuarioBase):
             detail = f"Error de validación: {str(e)}"
         )
 
-    except Exception as e:
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al registrar el doctor: {str(e)}"
@@ -57,7 +73,7 @@ async def insert_doctors_to_db(doctor: UsuarioBase):
 
 async def get_all_doctors() -> list[dict]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
 
             cursor.execute(
@@ -83,7 +99,9 @@ async def get_all_doctors() -> list[dict]:
                 doctores.append(doctor)
             
             return doctores
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener los doctores: {str(e)}"
@@ -91,7 +109,7 @@ async def get_all_doctors() -> list[dict]:
 
 async def get_doctor_patients(doctor_dni: str) -> list[dict]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
 
             cursor.execute(
@@ -104,7 +122,7 @@ async def get_doctor_patients(doctor_dni: str) -> list[dict]:
                 FROM usuario AS user
                 JOIN paciente AS pat ON user.dni = pat.dni_paciente
                 WHERE pat.dni_medico = ?
-                ORDER BY user.apellidos, user.nombre
+                ORDER BY user.nombre, user.apellidos
                 """,
                 (doctor_dni,)
             )
@@ -121,7 +139,9 @@ async def get_doctor_patients(doctor_dni: str) -> list[dict]:
                 pacientes.append(paciente)
             
             return pacientes
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener los pacientes del doctor: {str(e)}"
@@ -154,12 +174,6 @@ async def register_doctor(doctor: UsuarioBase):
     except HTTPException:
         raise
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al registrar el doctor:{str(e)}"
-        )
-
 @router.get('/list', status_code=status.HTTP_200_OK)
 async def list_doctors():
     try:
@@ -176,12 +190,6 @@ async def list_doctors():
     
     except HTTPException:
         raise
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener la lista de doctores: {str(e)}"
-        )
 
 @router.get('/listOfPatients', status_code=status.HTTP_200_OK)
 async def list_doctor_patients(current_doctor: dict = Depends(get_current_user)):
@@ -200,9 +208,3 @@ async def list_doctor_patients(current_doctor: dict = Depends(get_current_user))
     
     except HTTPException:
         raise
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener la lista de pacientes del doctor: {str(e)}"
-        )

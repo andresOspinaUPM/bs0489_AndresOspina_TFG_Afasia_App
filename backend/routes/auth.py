@@ -1,9 +1,10 @@
+import sqlite3
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from database.connection import get_db_connection
 from utils.jwt_utils import create_access_token
-import sqlite3
+from utils.password_utils import verify_password
 
 router = APIRouter(prefix='/auth')
 
@@ -14,11 +15,14 @@ class LoginRequest(BaseModel):
 @router.post('/login')
 async def login(credentials: LoginRequest):
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
-            user = cursor.execute("SELECT dni, nombre, email, contrasena FROM usuario WHERE email = ? AND contrasena = ?", (credentials.email, credentials.password)).fetchone()
+            user = cursor.execute(
+                "SELECT dni, nombre, email, contrasena FROM usuario WHERE email = ?",
+                (credentials.email,)
+            ).fetchone()
             
-            if not user:
+            if not user or not verify_password(credentials.password, user[3]):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED, 
                     detail="Email o contraseña incorrectos"
@@ -55,14 +59,10 @@ async def login(credentials: LoginRequest):
                 status_code = status.HTTP_200_OK,
                 content = response_data
             )
-
+    except HTTPException:
+        raise
     except sqlite3.Error as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error de base de datos: {e}"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error inesperado: {e}"
         )

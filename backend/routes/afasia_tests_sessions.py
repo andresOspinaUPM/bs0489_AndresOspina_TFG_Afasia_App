@@ -1,16 +1,16 @@
+import sqlite3
 from fastapi import APIRouter, status, HTTPException, Depends, Body
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.responses import JSONResponse
 from database.connection import get_db_connection
 from middleware.user_data import get_current_user
-import sqlite3
 
 router = APIRouter(prefix="/afasia-tests-sessions", tags=["Afasia Tests Sessions"])
 
 async def get_sessions_list_per_patient_from_db(dni_patient: str) -> list[dict]:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             result = cursor.execute(
                 """
@@ -34,7 +34,9 @@ async def get_sessions_list_per_patient_from_db(dni_patient: str) -> list[dict]:
                 }
                 sessions.append(session)
             return sessions
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al obtener la lista de sesiones del paciente desde la base de datos: {str(e)}"
@@ -42,7 +44,7 @@ async def get_sessions_list_per_patient_from_db(dni_patient: str) -> list[dict]:
 
 async def get_session_by_id_from_db(id_sesion: int) -> dict | None:
     try:
-        with get_db_connection("afasia_database.db") as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             result = cursor.execute(
                 """
@@ -63,7 +65,9 @@ async def get_session_by_id_from_db(id_sesion: int) -> dict | None:
                 "imagenes_aleatorias": bool(row[5]),
             }
             return session
-    except Exception as e:
+    except HTTPException:
+        raise
+    except sqlite3.Error as e:
         raise HTTPException(
             status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Error al obtener la sesión desde la base de datos: {str(e)}"
@@ -87,11 +91,8 @@ async def get_patient_sessions_list(request: PatientSessionsRequest, current_pat
         status_code=status.HTTP_200_OK,
         content=response_data
         )
-    except Exception as e:
-        raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"Error al obtener la lista de sesiones del paciente: {str(e)}"
-        )
+    except HTTPException:
+        raise
 
 @router.get('/session/{id_sesion}', status_code=status.HTTP_200_OK)
 async def get_session_by_id(id_sesion: int):
@@ -111,8 +112,5 @@ async def get_session_by_id(id_sesion: int):
         status_code=status.HTTP_200_OK,
         content=response_data
         )
-    except Exception as e:
-        raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"Error al obtener la sesión: {str(e)}"
-        )
+    except HTTPException:
+        raise

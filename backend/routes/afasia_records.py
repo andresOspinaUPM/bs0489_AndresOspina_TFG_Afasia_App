@@ -1,15 +1,14 @@
+import sqlite3
 from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from database.connection import get_db_connection
 from middleware.user_data import get_current_user
-import sqlite3
 
 router = APIRouter(prefix='/afasia-test-records', tags=['Afasia Tests Records'])
-database = "afasia_database.db"
 
 async def is_session_instance_completed(id_session: int) -> bool:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -34,7 +33,7 @@ async def is_session_instance_completed(id_session: int) -> bool:
 
 async def get_session_instances_records(id_session: int, word: str = None) -> list[dict]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor=conn.cursor()
             if word is None :
                 cursor.execute(
@@ -96,7 +95,7 @@ async def get_session_instances_records(id_session: int, word: str = None) -> li
 
 async def get_words_answered(id_session: int) -> list[dict]:
     try:
-        with get_db_connection(database) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -140,11 +139,6 @@ async def is_session_completed(id_session: int, current_patient: dict = Depends(
         return response_data
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener si una instancia de la sesion se ha completado"
-        )
 
 @router.get('/get-instances-records/{id_session}', status_code=status.HTTP_200_OK)
 async def get_intances_records(id_session: int, current_patient: dict = Depends(get_current_user)):
@@ -156,11 +150,8 @@ async def get_intances_records(id_session: int, current_patient: dict = Depends(
             "payload": instances_records
         }
         return response_data
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener los registros de las instancias de la sesión"
-        )
+    except HTTPException:
+        raise
 
 @router.get('/get-answered-words/{id_session}', status_code=status.HTTP_200_OK)
 async def get_answered_words(id_session: int, current_patient: dict = Depends(get_current_user)):
@@ -172,11 +163,8 @@ async def get_answered_words(id_session: int, current_patient: dict = Depends(ge
             "payload":words_responses
         }
         return response_data
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener las palabras respondidas - BE: {str(e)}"
-        )
+    except HTTPException:
+        raise
 
 @router.get('/get-records-by-word/{id_session}/{word}', status_code=status.HTTP_200_OK)
 async def get_records_by_word(id_session: int, word: str, current_patient: dict = Depends(get_current_user)):
@@ -188,8 +176,5 @@ async def get_records_by_word(id_session: int, word: str, current_patient: dict 
             "payload": instances_records
         }
         return response_data
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al obtener los registros por palabra"
-        )
+    except HTTPException:
+        raise
