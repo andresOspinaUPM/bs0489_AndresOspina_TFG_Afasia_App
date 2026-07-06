@@ -65,4 +65,4 @@ El frontend quedará disponible en la URL que indique la terminal (por defecto s
 
 ## Notas
 * No se han usado datos reales de pacientes ni médicos durante el desarrollo y las pruebas.
-* Las claves de configuración se gestionan mediante variables de entorno (archivo `.env`) siguiendo las buenas prácticas de separación entre configuración y código fuente.
+* Las claves de configuración se gestionan mediante variables de entorno - archivo `.env`
