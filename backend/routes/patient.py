@@ -13,6 +13,19 @@ async def registrar_paciente(paciente: PacienteBase):
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT 1 FROM medico WHERE dni_medico = ?
+                """,
+                (paciente.dni_medico,)
+            )
+            if cursor.fetchone() is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="el dni del medico seleccionado no esta en la base de datos"
+                )
+
             contrasena_hasheada = hash_password(paciente.contrasena)
 
             cursor.execute(

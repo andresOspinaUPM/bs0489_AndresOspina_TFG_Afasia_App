@@ -17,6 +17,19 @@ async def start_session_instance(id_sesion: int, id_paciente: str) -> int:
 
             cursor.execute(
                 """
+                SELECT 1 FROM configuracion_sesion
+                WHERE id_sesion = ? AND id_paciente = ?
+                """,
+                (id_sesion, id_paciente)
+            )
+            if cursor.fetchone() is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Sesión no encontrada para el paciente actual"
+                )
+
+            cursor.execute(
+                """
                 SELECT id_instancia FROM instancia_sesion
                 WHERE id_sesion = ?
                 AND id_paciente = ?
@@ -79,21 +92,37 @@ async def delete_incomplete_instance_session(cursor, instance_id: int) -> None:
         (instance_id,)
     )
     
+async def verify_instance_belongs_to_patient(cursor, id_session_instance: int, dni_paciente: str) -> None:
+    cursor.execute(
+        """
+        SELECT 1 FROM instancia_sesion
+        WHERE id_instancia = ? AND id_paciente = ?
+        """,
+        (id_session_instance, dni_paciente)
+    )
+    if cursor.fetchone() is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Instancia de sesión no encontrada para el paciente actual"
+        )
 
-async def get_predefined_test_data(id_sesion: int) -> List[dict]:
+async def get_predefined_test_data(id_sesion: int, dni_usuario: str, user_rol: str) -> List[dict]:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+            column_from_requester = "id_medico" if user_rol == "doctor" else "id_paciente"
             cursor.execute(
-                """
+                f"""
                 SELECT p.id_palabra, p.nombre_palabra, i.ruta_imagen, sp.orden_prueba
                 FROM sesion_prueba_predefinida AS sp
                 INNER JOIN palabra AS p ON p.id_palabra = sp.id_palabra
+                INNER JOIN configuracion_sesion AS cs ON cs.id_sesion = sp.id_sesion
                 LEFT JOIN imagen AS i ON p.id_imagen = i.id_imagen
                 WHERE sp.id_sesion = ?
+                AND cs.{column_from_requester} = ?
                 ORDER BY sp.orden_prueba ASC
                 """,
-                (id_sesion,)
+                (id_sesion, dni_usuario)
             )
             rows = cursor.fetchall()
             test_data = []
@@ -114,10 +143,13 @@ async def get_predefined_test_data(id_sesion: int) -> List[dict]:
             detail=f"Error al obtener los datos de la prueba: {str(e)}"
         )
 
-async def insert_random_test_into_prueba_aleatoria(id_session_instance: int, total_tests: int, nivel: str):
+async def insert_random_test_into_prueba_aleatoria(id_session_instance: int, total_tests: int, nivel: str, id_paciente: str):
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+
+            await verify_instance_belongs_to_patient(cursor, id_session_instance, id_paciente)
+
             random_words = await get_random_words_from_db(cursor, total_tests, nivel)
             orden_prueba = 1
             for (id_palabra,) in random_words:
@@ -157,10 +189,13 @@ async def get_random_words_from_db(cursor, total_tests: int, nivel: str) -> list
             detail=f"Error al obtener palabras aleatorias: {str(e)}"
         )
 
-async def get_random_tests_data(id_session_instance: int) -> List[dict]:
+async def get_random_tests_data(id_session_instance: int, id_paciente: str) -> List[dict]:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+
+            await verify_instance_belongs_to_patient(cursor, id_session_instance, id_paciente)
+
             cursor.execute(
                 """
                 SELECT p.id_palabra, p.nombre_palabra, i.ruta_imagen, pa.orden_prueba
@@ -193,10 +228,24 @@ async def get_random_tests_data(id_session_instance: int) -> List[dict]:
 
 # ------------ SAVE EJECUCIONES TESTS ---------------- #
 
-async def save_test_run(id_instance: int, id_word: int) -> Optional[int]:
+async def save_test_run(id_instance: int, id_word: int, id_paciente: str) -> Optional[int]:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT 1 FROM instancia_sesion
+                WHERE id_instancia = ? AND id_paciente = ?
+                """,
+                (id_instance, id_paciente)
+            )
+            if cursor.fetchone() is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Instancia de sesión no encontrada para el paciente actual"
+                )
+
             cursor.execute(
                 """
                 INSERT INTO registro_ejecucion_prueba (id_instancia, id_palabra)
@@ -369,10 +418,26 @@ async def get_description_asociacion_by_palabra(id_palabra: int) -> Optional[str
         )
 
 # # --------------- RESPONSE --------------- #
-async def save_response(test_response: TestResponse) -> Optional[int]:
+async def save_response(test_response: TestResponse, id_paciente: str) -> Optional[int]:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT 1 FROM registro_ejecucion_prueba AS reg
+                INNER JOIN instancia_sesion AS inst ON inst.id_instancia = reg.id_instancia
+                WHERE reg.id_ejecucion_prueba = ?
+                AND inst.id_paciente = ?
+                """,
+                (test_response.id_prueba, id_paciente)
+            )
+            if cursor.fetchone() is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Prueba no encontrada"
+                )
+
             cursor.execute(
                 """
                 INSERT INTO respuesta_prueba (id_prueba, tiempo_respuesta, respuesta_correcta )
@@ -395,7 +460,7 @@ async def save_response(test_response: TestResponse) -> Optional[int]:
             detail=f"Error al guardar la respuesta de la prueba: {str(e)}"
         )
 
-async def save_session_instance_as_completed(id_session_instance: int, date: str, is_completed: bool):
+async def save_session_instance_as_completed(id_session_instance: int, date: str, is_completed: bool, id_paciente: str):
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -403,9 +468,9 @@ async def save_session_instance_as_completed(id_session_instance: int, date: str
                 """
                 UPDATE instancia_sesion
                 SET fecha_fin = ?, completada = ?
-                WHERE id_instancia = ?
+                WHERE id_instancia = ? AND id_paciente = ?
                 """
-                ,(date, is_completed, id_session_instance)
+                ,(date, is_completed, id_session_instance, id_paciente)
             )
             conn.commit()
     except HTTPException:
@@ -416,7 +481,7 @@ async def save_session_instance_as_completed(id_session_instance: int, date: str
             detail=f"Error al guardar la instancia de la sesison como completada: {str(e)}"
         )
 
-async def delete_session_instance(id_session_instance: int):
+async def delete_session_instance(id_session_instance: int, id_paciente: str):
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -424,14 +489,17 @@ async def delete_session_instance(id_session_instance: int):
                 """
                 SELECT 1 FROM instancia_sesion 
                 WHERE id_instancia = ?
+                AND id_paciente = ?
                 AND completada = 0
                 """
-                ,(id_session_instance,)
+                ,(id_session_instance, id_paciente)
             )
-            instance = cursor.fetchone()
-
-            if not instance:
-                return
+            
+            if cursor.fetchone() is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No se encontró la instancia de sesión indicada"
+                )
             
             await delete_incomplete_instance_session(cursor, id_session_instance)
             conn.commit()
@@ -448,7 +516,7 @@ async def delete_session_instance(id_session_instance: int):
 @router.post('/start-session-instance/{id_sesion}', status_code=status.HTTP_201_CREATED)
 async def start_session_endpoint(id_sesion: int, current_user: dict = Depends(get_current_user)):
     try:
-        id_session_instance = await start_session_instance(id_sesion, current_user.get('dni'))
+        id_session_instance = await start_session_instance(id_sesion, current_user.get("dni"))
         response_data = {
             "success": True,
             "message": "Sesión iniciada correctamente",
@@ -462,10 +530,10 @@ async def start_session_endpoint(id_sesion: int, current_user: dict = Depends(ge
         raise
 
 @router.get('/test-data/{id_sesion}', status_code=status.HTTP_200_OK)
-async def start_session(id_sesion: int):
+async def start_session(id_sesion: int, current_user: dict = Depends(get_current_user)):
     try:
 
-        test_data = await get_predefined_test_data(id_sesion)
+        test_data = await get_predefined_test_data(id_sesion, current_user.get("dni"), current_user.get("user_rol"))
         if not test_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -484,10 +552,10 @@ async def start_session(id_sesion: int):
         raise
 
 @router.get('/random-test-data/{id_session_instance}/{total_tests}/{nivel}', status_code=status.HTTP_200_OK)
-async def get_random_test_data(id_session_instance: int, total_tests: int, nivel: str):
+async def get_random_test_data(id_session_instance: int, total_tests: int, nivel: str, current_user: dict = Depends(get_current_user)):
     try:
-        await insert_random_test_into_prueba_aleatoria(id_session_instance, total_tests, nivel)
-        test_data = await get_random_tests_data(id_session_instance)
+        await insert_random_test_into_prueba_aleatoria(id_session_instance, total_tests, nivel, current_user.get("dni"))
+        test_data = await get_random_tests_data(id_session_instance, current_user.get("dni"))
         if not test_data:
             raise HTTPException(
                 status_code = status.HTTP_404_NOT_FOUND,
@@ -539,9 +607,9 @@ async def get_descripciones_by_palabra(id_palabra: int):
         raise
 
 @router.post('/save-current-test-run/{id_instance}/{id_word}', status_code=status.HTTP_200_OK)
-async def save_current_test_run(id_instance: int, id_word: int):
+async def save_current_test_run(id_instance: int, id_word: int, current_user: dict = Depends(get_current_user)):
     try:
-        response = await save_test_run(id_instance, id_word)
+        response = await save_test_run(id_instance, id_word, current_user.get("dni"))
         if not response:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -564,7 +632,7 @@ async def save_current_test_run(id_instance: int, id_word: int):
 @router.post('/save-response', status_code=status.HTTP_200_OK)
 async def save_test_response(test_response: TestResponse, current_user: dict = Depends(get_current_user)):
     try:
-        response = await save_response(test_response)
+        response = await save_response(test_response, current_user.get("dni"))
         if not response:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -587,7 +655,7 @@ async def save_session_as_completed(id_session_instance: int, current_user: dict
         date = datetime.now()
         date_str = date.strftime('%Y-%m-%d %H:%M:%S')
         is_completed = True
-        await save_session_instance_as_completed(id_session_instance, date_str, is_completed)
+        await save_session_instance_as_completed(id_session_instance, date_str, is_completed, current_user.get("dni"))
         response_data={
             "success":True,
             "message":"Instancia de la sesion guardada como completada correctamente"
@@ -599,7 +667,7 @@ async def save_session_as_completed(id_session_instance: int, current_user: dict
 @router.delete('/remove-session-instance/{id_session_instance}', status_code=status.HTTP_200_OK)
 async def remove_session_instance(id_session_instance: int, current_user: dict = Depends(get_current_user)):
     try:
-        await delete_session_instance(id_session_instance)
+        await delete_session_instance(id_session_instance, current_user.get("dni"))
         response_data={
             "success":True,
             "message":f"Se ha eliminado la intancia de sesión con id: {id_session_instance}"

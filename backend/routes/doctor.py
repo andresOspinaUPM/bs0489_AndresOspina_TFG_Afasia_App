@@ -194,6 +194,11 @@ async def list_doctors():
 @router.get('/listOfPatients', status_code=status.HTTP_200_OK)
 async def list_doctor_patients(current_doctor: dict = Depends(get_current_user)):
     try:
+        if current_doctor.get("user_rol") != "doctor":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Solo los doctores pueden acceder a una lista de pacientes"
+            )
         doctor_dni = current_doctor.get("dni")
         patients = await get_doctor_patients(doctor_dni)
         response_data = {

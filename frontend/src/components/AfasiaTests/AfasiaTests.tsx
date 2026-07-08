@@ -44,6 +44,7 @@ function AfasiaTests() {
 	const [userAnswer, setUserAnswer] = useState<string>('');
 	const [testResults, setTestResults] = useState<TestResult[]>([]);
 	const [showModal, setShowModal] = useState(false);
+	const [startError, setStartError] = useState<boolean>(false);
 
 // ********** Refs *********
 	const loadTestsRef = useRef(false);
@@ -276,16 +277,14 @@ function AfasiaTests() {
 		try {
 			const response = await startSessionInstance(sessionId);
 			if (response.payload === undefined) {
-				console.error('No se obtuvo el ID de la instancia de sesión');
-				alert('Error al iniciar la sesión de pruebas. Por favor, intentalo nuevamente');
+				setStartError(true);
 			} else {
 				setSessionInstanceId(response.payload as number);
 				setContextSessionInstance(response.payload as number);
 			}
 		} catch (error) {
 			sessionInstanceStartedRef.current = false;
-			alert('Error al iniciar la sesión de pruebas. Por favor, recarga la página.');
-			console.error('Error al iniciar la sesión de pruebas');
+			setStartError(true);
 		}
 	};
 
@@ -385,15 +384,29 @@ function AfasiaTests() {
 		);
 	}
 
+	if (startError) {
+		return (
+			<div className={style['main-test-container']}>
+				<div style={{ textAlign: 'center', padding: '50px' }}>
+					<h3>No se pudo iniciar esta prueba</h3>
+					<p>Puede que la sesión indicada ya no esté disponible para tu usuario.</p>
+					<Button variant="primary" onClick={() => navigate('/paciente/sesiones-pruebas')}>
+						Volver a mis pruebas
+					</Button>
+				</div>
+			</div>
+		);
+	}
+
 	if(isTestCompleted){
 		return(
 			<div className={style['main-test-container']}>
 				<Modal show={showModal} onHide={() => {handleCloseModal()}} backdrop="static" centered>
 					<Modal.Header>
-						<Modal.Title>Se ha completado la prueba exitosamente</Modal.Title>
+						<Modal.Title>Se ha completado la sesión exitosamente</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
-						<h4>Has completado la prueba con los siguientes resultados</h4>
+						<h4>Has completado la sesión con los siguientes resultados</h4>
 						<br/>
 						<Table striped>
 							<thead>

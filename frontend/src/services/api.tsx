@@ -41,6 +41,31 @@ api.interceptors.request.use(
 	}
 );
 
+api.interceptors.response.use(
+	(response) => response,
+	(error) => {
+		const isLoginRequest = error.config?.url?.includes('/auth/login');
+		if (!isLoginRequest && axios.isAxiosError(error) && error.response?.status === 401) {
+			logoutUsuario();
+			window.location.href = '/login';
+		}
+		return Promise.reject(error);
+	}
+);
+
+const extractErrorMessage = (detail: unknown, fallback: string): string => {
+	if (typeof detail === 'string') {
+		return detail;
+	}
+	if (Array.isArray(detail)) {
+		const messages = (detail as Array<{ msg: string }>).map((d) => {
+			return d.msg.replace(/^Value error,\s*/i, '');
+		});
+		return messages.join(' | ');
+	}
+	return fallback;
+};
+
 export const registerPatient = async (patientData: RegisterPatient): Promise<UserResponseData> => {
 	try {
 		const response = await api.post<UserResponseData>('/paciente/registro', patientData);
@@ -52,7 +77,7 @@ export const registerPatient = async (patientData: RegisterPatient): Promise<Use
 		return response.data;
 	} catch (error) {
 		if (axios.isAxiosError(error) && error.response) {
-			throw new Error(error.response.data.detail || 'Error al registrar paciente');
+			throw new Error(extractErrorMessage(error.response.data.detail, 'Error al registrar paciente'));
 		}
 		throw new Error('Error al registrar paciente');
 	}
@@ -69,14 +94,7 @@ export const registerDoctor = async (medicoData: MedicoRegistro): Promise<UserRe
 		return response.data;
 	} catch (error) {
 		if (axios.isAxiosError(error) && error.response) {
-			if (error.response.status === 422 && error.response.data.detail) {
-				const details = error.response.data.detail;
-
-				if (typeof details === 'string') {
-					throw new Error(details);
-				}
-			}
-			throw new Error(error.response.data.detail || 'Error al registrar médico');
+			throw new Error(extractErrorMessage(error.response.data.detail, 'Error al registrar médico'));
 		}
 		throw new Error('Error al registrar médico');
 	}

@@ -34,12 +34,15 @@ El backend requiere un archivo `.env` con las claves de configuración, por razo
 
 ```
 cd backend
+
+Crear y activar un entorno virtual:
+python3 -m venv venv
+source venv/bin/activate      # En Windows: venv\Scripts\activate
+
+Instalar dependencias:
 pip install -r requirements.txt
-```
 
 Levantar el servidor:
-
-```
 python3 main.py
 ```
 

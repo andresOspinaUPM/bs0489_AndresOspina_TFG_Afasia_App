@@ -37,6 +37,21 @@ async def insert_sesion_in_db (dni_doctor: str, config_data: dict):
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
+            
+            cursor.execute(
+                """
+                SELECT 1 FROM paciente
+                WHERE dni_paciente = ? AND dni_medico = ? 
+                """,
+                (dni_paciente, dni_doctor)
+            )
+
+            if cursor.fetchone() is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="paciente no encotrado en la base de datos"
+                )
+
             cursor.execute(
                 """
                 INSERT INTO sesion (nombre_sesion, nivel, cantidad_pruebas, tiempo_limite_por_prueba, imagenes_aleatorias)
