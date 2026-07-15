@@ -1,6 +1,6 @@
 .main-test-container {
 	width: 100vw;
-	height: 100vh;
+	min-height: 100vh;
 	display: flex;
 	justify-content: space-evenly;
 }
@@ -18,15 +18,15 @@
 	text-align: center;
 }
 
-.result-item{
-  margin: 0.2rem 0;
+.result-item {
+	margin: 0.2rem 0;
 }
 
 /* TESTS CONTAINERS */
 
 .test-container {
 	width: 75vw;
-	height: 85vh;
+	min-height: 85vh;
 	margin-top: 1rem;
 	display: flex;
 	flex-direction: column;
@@ -34,10 +34,9 @@
 
 .test-cards-container {
 	width: 95%;
-	height: 85%;
 	display: grid;
 	grid-template-columns: repeat(4, 1fr) minmax(0, 1fr);
-	grid-template-rows: repeat(2, 1fr) minmax(0, 1fr);
+	grid-template-rows: repeat(3, minmax(160px, auto));
 	gap: clamp(0.5rem, 1.5vw, 1.5rem);
 	margin: 1rem auto 2rem;
 }
@@ -48,17 +47,25 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	align-self: center;
+	justify-self: center;
 }
 
 .image-card-container,
-.surrounding-card,
-.word-image {
-	width: clamp(140px, 11vw, 230px);
-	height: clamp(120px, 11vw, 200px);
+.surrounding-card {
+	width: clamp(200px, 11vw, 230px);
+	min-height: clamp(120px, 11vw, 200px);
 	border: 1px solid black;
 	background-color: #fff;
 	padding: clamp(0.5rem, 1vw, 10px);
 	box-sizing: border-box;
+}
+
+.word-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
 }
 
 .category-card {
@@ -69,6 +76,10 @@
 
 .card-body {
 	height: 100%;
+	display: flex;
+	flex-direction: column;
+	overflow-wrap: break-word;
+	word-break: break-word;
 }
 
 .use-card {
